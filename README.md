@@ -12,7 +12,10 @@ SnapNutrient is an AI-powered nutrition tracking app that helps users analyze th
 
 SnapNutrient uses few-shot prompting and state-of-the-art large language models (LLMs) to analyze user-submitted food images. Upon uploading a photo, the app generates a targeted prompt with embedded examples to guide the model in identifying food items and their macronutrient breakdown (calories, carbohydrates, proteins, fats). The result is a fast, detailed nutritional analysis with minimal user effort.
 
-![Image Analysis Screenshot](./../snapnutrient/ReadMe/Image%20Analysis.png)
+### 📷 Image Analysis Example
+
+![Figure 1: Image Analysis](.ReadMe/Image Analysis.png)
+
 ---
 
 ### 📊 2. User Dashboard & Dietary Suggestions
