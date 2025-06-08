@@ -79,18 +79,10 @@ This repository is for demonstration and educational purposes. Please do not cop
 
 ---
 
-## 📸 Demo Screenshots (Optional)
-
-You can optionally include screenshots or a screen recording of:
-- Image analysis results
-- Dashboard summaries
-- Social feed post interactions
-
----
-
 ## 📬 Contact
 
-Have questions or feedback? Feel free to reach out via GitHub Issues or email.
+Have questions or feedback? Feel free to reach out via GitHub Issues or email: 
+Langkunlong@gmail.com
 
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
