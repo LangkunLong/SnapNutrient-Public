@@ -12,7 +12,10 @@ SnapNutrient is an AI-powered nutrition tracking app that helps users analyze th
 
 SnapNutrient uses few-shot prompting and state-of-the-art large language models (LLMs) to analyze user-submitted food images. Upon uploading a photo, the app generates a targeted prompt with embedded examples to guide the model in identifying food items and their macronutrient breakdown (calories, carbohydrates, proteins, fats). The result is a fast, detailed nutritional analysis with minimal user effort.
 
-![Image Analysis Screenshot](./../snapnutrient/ReadMe/Image%20Analysis.png)
+### 📷 Image Analysis Example
+
+![Figure 1: Image Analysis](.ReadMe/Image Analysis.png)
+
 ---
 
 ### 📊 2. User Dashboard & Dietary Suggestions
@@ -76,18 +79,10 @@ This repository is for demonstration and educational purposes. Please do not cop
 
 ---
 
-## 📸 Demo Screenshots (Optional)
-
-You can optionally include screenshots or a screen recording of:
-- Image analysis results
-- Dashboard summaries
-- Social feed post interactions
-
----
-
 ## 📬 Contact
 
-Have questions or feedback? Feel free to reach out via GitHub Issues or email.
+Have questions or feedback? Feel free to reach out via GitHub Issues or email: 
+Langkunlong@gmail.com
 
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
