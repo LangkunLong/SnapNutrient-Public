@@ -14,7 +14,7 @@ SnapNutrient uses few-shot prompting and state-of-the-art large language models 
 
 ### 📷 Image Analysis Example
 
-![Figure 1: Image Analysis](.ReadMe/Image Analysis.png)
+![Figure 1: Image Analysis](./ReadMe/fig1.png)
 
 ---
 
@@ -30,7 +30,7 @@ The SnapNutrient dashboard gives users immediate access to:
 
 Meal data is fetched from AWS DynamoDB (`SnapNutrient_mealEntries`), with associated images stored in S3. The dashboard ensures low-latency access through optimized batch queries and provides a smooth, responsive UI built with React.
 
-![Image Analysis Screenshot](./../snapnutrient/ReadMe/Image%20Analysis.png)
+![Figure 2: DashBoard + Personalized Meal Suggestions](./ReadMe/fig2.png)
 
 ---
 
@@ -42,14 +42,15 @@ Inspired by platforms like Instagram, the social feed allows users to:
 - Like and comment on posts
 - Scroll through posts in a paginated, optimized feed
 
+![Figure 3: Social Media](./ReadMe/fig3.png)
+
 Posts are stored in DynamoDB (`SnapNutrient_posts`) with images referenced via S3 keys. The frontend uses lazy loading and batched S3 requests to minimize latency and improve performance.
 
 > Posting flow: Upload/take photo → Add caption → Preview → Share → Instant post display.
 
-The goal of the social platform is to build a motivating, supportive user community — users land here first to inspire healthy habits through peer engagement.
+![Figure 4: Post Upload](./ReadMe/fig4.png)
 
-![Image Analysis Screenshot](./../snapnutrient/ReadMe/Social%20Workflow%201.png)
-![Image Analysis Screenshot](./../snapnutrient/ReadMe/Social%20Workflow%202.png)
+The goal of the social platform is to build a motivating, supportive user community — users land here first to inspire healthy habits through peer engagement.
 
 ---
 
