@@ -67,7 +67,7 @@ export default function Unauthorized_Home() {
             <div className="md:w-1/3 p-6">
               <div className="relative h-[200px] mb-4">
                 <Image
-                  src="https://snapnutrient.s3.us-east-1.amazonaws.com/undefined/step1.jpg"
+                  src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/undefined/step1.jpg"
                   alt="Take a photo"
                   fill
                   className="object-cover rounded-lg"
@@ -79,7 +79,7 @@ export default function Unauthorized_Home() {
             <div className="md:w-1/3 p-6">
               <div className="relative h-[200px] mb-4">
                 <Image
-                  src="https://snapnutrient.s3.us-east-1.amazonaws.com/undefined/step2.jpg"
+                  src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/undefined/step2.jpg"
                   alt="AI Analysis"
                   fill
                   className="object-cover rounded-lg"
@@ -91,7 +91,7 @@ export default function Unauthorized_Home() {
             <div className="md:w-1/3 p-6">
               <div className="relative h-[200px] mb-4">
                 <Image
-                  src="https://snapnutrient.s3.us-east-1.amazonaws.com/undefined/step3.jpg"
+                  src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/undefined/step3.jpg"
                   alt="Track Progress"
                   fill
                   className="object-cover rounded-lg"
