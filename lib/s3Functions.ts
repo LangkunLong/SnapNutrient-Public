@@ -4,7 +4,7 @@ import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from 'uuid';
 
-const S3_BUCKET_NAME="snapnutrient"
+const S3_BUCKET_NAME="snapnutrient-s3"
 // lib/s3Functions.ts
 
 export async function generatePresignedUrl(fileType: string, folder: string) {

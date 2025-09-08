@@ -14,7 +14,7 @@ const s3Client = new S3Client({
   },
 });
 
-const S3_BUCKET_NAME = "snapnutrient";
+const S3_BUCKET_NAME = "snapnutrient-s3";
 
 export async function POST(req: NextRequest) {
   try {
