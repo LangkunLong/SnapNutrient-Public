@@ -15,25 +15,25 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: '/',
     icons: [
       {
-        src: 'https://snapnutrient.s3.us-east-1.amazonaws.com/undefined/SnapNutrient.png',
+        src: 'https://snapnutrient-s3.s3.us-east-1.amazonaws.com/undefined/SnapNutrient.png',
         sizes: '788x712',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: 'https://snapnutrient.s3.us-east-1.amazonaws.com/undefined/SnapNutrient-192.png',
+        src: 'https://snapnutrient-s3.s3.us-east-1.amazonaws.com/undefined/SnapNutrient-192.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: 'https://snapnutrient.s3.us-east-1.amazonaws.com/undefined/SnapNutrient-384.png',
+        src: 'https://snapnutrient-s3.s3.us-east-1.amazonaws.com/undefined/SnapNutrient-384.png',
         sizes: '384x384',
         type: 'image/png',
         purpose: 'any'
       },
       {
-        src: 'https://snapnutrient.s3.us-east-1.amazonaws.com/undefined/SnapNutrient-512.png',
+        src: 'https://snapnutrient-s3.s3.us-east-1.amazonaws.com/undefined/SnapNutrient-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any'
