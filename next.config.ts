@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'snapnutrient.s3.us-east-1.amazonaws.com',
+        hostname: 'snapnutrient-s3.s3.us-east-1.amazonaws.com',
         port: '',
         pathname: '/**',
       },
