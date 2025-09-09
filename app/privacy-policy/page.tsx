@@ -138,7 +138,7 @@ export default function PrivacyPolicy() {
                 If you have any questions about this Privacy Policy, please contact us at:
               </p>
               <p className="text-gray-700 mt-2">
-                Email: privacy@snapnutrient.com<br />
+                Email: langkunlong@gmail.com<br />
                 SnapNutrient Team<br />
                 University of Toronto<br />
                 Toronto, ON, Canada
