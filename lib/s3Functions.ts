@@ -8,24 +8,21 @@ const S3_BUCKET_NAME="snapnutrient-s3"
 // lib/s3Functions.ts
 
 // added following cross-origin policy in s3:
-/*[
-    {
-        "AllowedHeaders": [
-            "Authorization",
-            "Content-Type"
-        ],
-        "AllowedMethods": [
-            "GET",
-            "HEAD"
-        ],
-        "AllowedOrigins": [
-            "https://www.snapnutrient.com",
-            "http://localhost:3000"
-        ],
-        "ExposeHeaders": [],
-        "MaxAgeSeconds": 3000
-    }
-]*/
+/*
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "https://www.snapnutrient.com"
+    ],
+    "ExposeHeaders": [],
+    "MaxAgeSeconds": 3000
+  }
+]
+*/
+
 
 
 export async function generatePresignedUrl(fileType: string, folder: string) {
