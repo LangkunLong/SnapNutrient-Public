@@ -70,18 +70,20 @@ const CardActions = React.forwardRef<
     onLike: () => void; //handlers for like and comment, possibly share
     onComment: () => void;
     isLiked?: boolean;
+    likeDisabled?: boolean;
     //onShare: () => void; 
   }
->(({ className, likes, commentsCount, onLike, onComment,isLiked, ...props }, ref) => (
+>(({ className, likes, commentsCount, onLike, onComment,isLiked, likeDisabled, ...props }, ref) => (
   <div
     ref={ref}
     className={cn("flex items-center space-x-4 p-4", className)} // Action icons layout
     {...props}
   >
     {/* Like button */}
-    <button 
-      className="text-gray-600 flex items-center hover:text-red-600 transition-colors"
-      onClick={onLike} 
+    <button
+      className="text-gray-600 flex items-center hover:text-red-600 transition-colors disabled:opacity-50"
+      onClick={onLike}
+      disabled={likeDisabled}
       >
       {isLiked ? '❤️' : '🤍'} <span className="ml-1">{likes}</span>
     </button> 

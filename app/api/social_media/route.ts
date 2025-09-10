@@ -9,7 +9,7 @@ interface SocialMediaTable{
     caption: string;
     comments: { user: string; text: string }[];
     likes: number;
-    liked_by: string[];
+    liked_by?: string[];
     posted_time: string;
 }
 

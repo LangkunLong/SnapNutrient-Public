@@ -30,7 +30,7 @@ export async function addPost(post: SocialMediaPost) {
       photo_id: { S: post.photo_id},
       caption: { S: post.caption },
       likes: { N: post.likes.toString() },
-      liked_by: { SS: post.liked_by || [] },
+      ...(post.liked_by?.length ? { liked_by: { SS: post.liked_by } } : {}),
       comments: { L: post.comments.map(comment => ({
         M: { user: { S: comment.user }, text: { S: comment.text } }
       })) },
@@ -226,7 +226,7 @@ function convertDynamoDBToPost(item: any): SocialMediaPost {
         text: comment.M.text.S,
     })),
     likes: item.likes && item.likes.N ? parseInt(item.likes.N, 10) || 0 : 0,
-    liked_by: item.liked_by && item.liked_by.SS ? item.liked_by.SS : [],
+    liked_by: item.liked_by?.SS ?? [],
     posted_time: item.posted_time.S
     };
 }

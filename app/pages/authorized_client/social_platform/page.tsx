@@ -81,6 +81,7 @@ export default function SocialPlatform_tab() {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const {data: session} = useSession();
     const [userDataMap, setUserDataMap] = useState<Record<string, UserData>>({});
+    const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
 
     const [hasMore, setHasMore] = useState(true);
     const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
@@ -520,6 +521,9 @@ export default function SocialPlatform_tab() {
       }
 
       const hasLiked = isPostLiked(post);
+      const postKey = `${post.id}-${post.photo_id}`;
+      if (likeLoading[postKey]) return;
+      setLikeLoading(prev => ({ ...prev, [postKey]: true }));
 
       try {
         console.log("Toggling like for post:", post.id, "photo:", post.photo_id);
@@ -619,6 +623,8 @@ export default function SocialPlatform_tab() {
 
         // Show error to user
         alert("Failed to like post. Please try again.");
+        } finally {
+        setLikeLoading(prev => ({ ...prev, [postKey]: false }));
       }
     };
 
@@ -828,6 +834,7 @@ export default function SocialPlatform_tab() {
                 onLike={() => handleLike(post)}
                 onComment={() => handleViewComments(post)}  // Use the new function instead
                 isLiked={isPostLiked(post)}
+                likeDisabled={!!likeLoading[`${post.id}-${post.photo_id}`]}
               />
       
               {/* Using CardCaption component */}
