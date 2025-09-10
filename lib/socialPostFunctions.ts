@@ -27,13 +27,17 @@ export async function addPost(post: SocialMediaPost) {
     TableName: SOCIAL_MEDIA_TABLE,
     Item: {
       id: { S: post.id },
-      photo_id: { S: post.photo_id},
+      photo_id: { S: post.photo_id },
       caption: { S: post.caption },
       likes: { N: post.likes.toString() },
-      liked_by: { SS: post.liked_by || [] },
-      comments: { L: post.comments.map(comment => ({
-        M: { user: { S: comment.user }, text: { S: comment.text } }
-      })) },
+      ...(post.liked_by && post.liked_by.length > 0
+        ? { liked_by: { SS: post.liked_by } }
+        : {}),
+      comments: {
+        L: post.comments.map(comment => ({
+          M: { user: { S: comment.user }, text: { S: comment.text } }
+        }))
+      },
       posted_time: { S: post.posted_time || now },
       feed_type: { S: "GLOBAL" }
     },
