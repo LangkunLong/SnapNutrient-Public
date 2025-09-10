@@ -22,8 +22,9 @@ interface Post {
   photo_id: string;
   picture: string; // s3 url
   likes: number;
+  liked_by: string[];
   comments: { user: string; text: string }[];
-  posted_time: string 
+  posted_time: string
   // future optimization: include the posted date on the posts
 }
 
@@ -80,7 +81,6 @@ export default function SocialPlatform_tab() {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const {data: session} = useSession();
     const [userDataMap, setUserDataMap] = useState<Record<string, UserData>>({});
-    const [likedPosts, setLikedPosts] = useState<Post[]>([]);
 
     const [hasMore, setHasMore] = useState(true);
     const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
@@ -475,7 +475,8 @@ export default function SocialPlatform_tab() {
             picture: post.photo_id && imageUrlMap[post.photo_id]
               ? imageUrlMap[post.photo_id]
               : default_social_pic,
-            likes: likesCount
+            likes: likesCount,
+            liked_by: post.liked_by || []
           };
         }));
     
@@ -505,9 +506,8 @@ export default function SocialPlatform_tab() {
     
 
     const isPostLiked = (post: Post): boolean => {
-      return likedPosts.some(likedPost => 
-        likedPost.id === post.id && likedPost.photo_id === post.photo_id
-      );
+      if (!session?.user?.email) return false;
+      return post.liked_by?.includes(session.user.email);
     };
 
 
@@ -519,102 +519,104 @@ export default function SocialPlatform_tab() {
         return;
       }
 
-      if (isPostLiked(post)) {
-        alert("You've already liked this post");
-        return;
-      }
+      const hasLiked = isPostLiked(post);
 
       try {
-        console.log("Liking post:", post.id, "photo:", post.photo_id);
-        
-        // Optimistically update the liked posts tracking
-        setLikedPosts(prev => [...prev, post]);
-        
-        // Optimistically update the UI to show the like immediately
-        setPosts(currentPosts => 
-          currentPosts.map(p => 
+        console.log("Toggling like for post:", post.id, "photo:", post.photo_id);
+
+        // Optimistically update UI
+        setPosts(currentPosts =>
+          currentPosts.map(p =>
             (p.id === post.id && p.photo_id === post.photo_id) ? {
               ...p,
-              likes: p.likes + 1
+              likes: hasLiked ? p.likes - 1 : p.likes + 1,
+              liked_by: hasLiked
+                ? p.liked_by.filter(u => u !== session.user!.email)
+                : [...p.liked_by, session.user!.email]
             } : p
           )
         );
-        
-        // Also update the active post if it's open
+
         if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
           setActivePost({
             ...activePost,
-            likes: activePost.likes + 1
+            likes: hasLiked ? activePost.likes - 1 : activePost.likes + 1,
+            liked_by: hasLiked
+              ? activePost.liked_by.filter(u => u !== session.user!.email)
+              : [...activePost.liked_by, session.user!.email]
           });
         }
-        
+
         // Make the API call to update the like in the database
         const response = await fetch('/api/social_media/like', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ 
-            postId: post.id, 
+          body: JSON.stringify({
+            postId: post.id,
             photo_id: post.photo_id,
           }),
         });
-        
+
         if (!response.ok) {
           // If the API call fails, revert the optimistic update
           const errorData = await response.json();
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
-        
+
         const result = await response.json();
         console.log("Like response:", result);
-        
-        // If the server returns the updated like count, update the state with the accurate count
-        if (result.data && result.data.Attributes && result.data.Attributes.likes) {
-          const serverLikeCount = parseInt(result.data.Attributes.likes.N, 10);
-          
-          // Update posts array with server like count
-          setPosts(currentPosts => 
-            currentPosts.map(p => 
+
+        if (result.data && result.data.Attributes) {
+          const attrs = result.data.Attributes;
+          const serverLikeCount = attrs.likes && attrs.likes.N ? parseInt(attrs.likes.N, 10) : 0;
+          const serverLikedBy = attrs.liked_by && attrs.liked_by.SS ? attrs.liked_by.SS : [];
+
+          setPosts(currentPosts =>
+            currentPosts.map(p =>
               (p.id === post.id && p.photo_id === post.photo_id) ? {
                 ...p,
-                likes: serverLikeCount
+                likes: serverLikeCount,
+                liked_by: serverLikedBy
               } : p
             )
           );
-          
-          // Update active post if relevant
+
           if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
             setActivePost({
               ...activePost,
-              likes: serverLikeCount
+              likes: serverLikeCount,
+              liked_by: serverLikedBy
             });
           }
         }
       } catch (error: any) {
         console.error("Error liking post:", error);
-        
+
         // Revert the optimistic update if there was an error
-        setLikedPosts(prev => 
-          prev.filter(p => !(p.id === post.id && p.photo_id === post.photo_id))
-        );
-        
-        setPosts(currentPosts => 
-          currentPosts.map(p => 
+        setPosts(currentPosts =>
+          currentPosts.map(p =>
             (p.id === post.id && p.photo_id === post.photo_id) ? {
               ...p,
-              likes: p.likes - 1
+              likes: hasLiked ? p.likes + 1 : p.likes - 1,
+              liked_by: hasLiked
+                ? [...p.liked_by, session.user!.email]
+                : p.liked_by.filter(u => u !== session.user!.email)
             } : p
           )
         );
-        
+
         if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
           setActivePost({
             ...activePost,
-            likes: activePost.likes - 1
+            likes: hasLiked ? activePost.likes + 1 : activePost.likes - 1,
+            liked_by: hasLiked
+              ? [...activePost.liked_by, session.user!.email]
+              : activePost.liked_by.filter(u => u !== session.user!.email)
           });
         }
-        
+
         // Show error to user
         alert("Failed to like post. Please try again.");
       }

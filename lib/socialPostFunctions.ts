@@ -5,12 +5,13 @@ import { client } from './aws_client';
 import { PutItemCommand, UpdateItemCommand, QueryCommand, DeleteItemCommand, ReturnValue, GetItemCommand } from '@aws-sdk/client-dynamodb';
 
 export interface SocialMediaPost {
-  id: string; 
-  photo_id: string; 
-  caption: string; 
+  id: string;
+  photo_id: string;
+  caption: string;
   comments: { user: string; text: string }[];
   likes: number;
-  posted_time: string;  
+  liked_by?: string[];
+  posted_time: string;
 }
 
 const SOCIAL_MEDIA_TABLE = "SnapNutrient_posts";
@@ -29,6 +30,7 @@ export async function addPost(post: SocialMediaPost) {
       photo_id: { S: post.photo_id},
       caption: { S: post.caption },
       likes: { N: post.likes.toString() },
+      liked_by: { SS: post.liked_by || [] },
       comments: { L: post.comments.map(comment => ({
         M: { user: { S: comment.user }, text: { S: comment.text } }
       })) },
@@ -224,34 +226,48 @@ function convertDynamoDBToPost(item: any): SocialMediaPost {
         text: comment.M.text.S,
     })),
     likes: item.likes && item.likes.N ? parseInt(item.likes.N, 10) || 0 : 0,
+    liked_by: item.liked_by && item.liked_by.SS ? item.liked_by.SS : [],
     posted_time: item.posted_time.S
     };
 }
 
-export async function likePost(postId: string, photoId: string) {
-  if (!postId || !photoId) {
-    console.error("Missing required parameters for likePost:", { postId, photoId });
-    throw new Error("Post ID and Photo ID are required");
+export async function likePost(postId: string, photoId: string, userId: string) {
+  if (!postId || !photoId || !userId) {
+    console.error("Missing required parameters for likePost:", { postId, photoId, userId });
+    throw new Error("Post ID, Photo ID and User ID are required");
   }
-  
+
   try {
-    console.log(`Liking post: ${postId} with photo: ${photoId}`);
-    
-    // Simplified approach using just the primary key
-    const params = {
+    console.log(`Toggling like for post: ${postId} with photo: ${photoId} by user: ${userId}`);
+
+    const post = await getPostById(postId, photoId);
+    const hasLiked = post?.liked_by?.includes(userId);
+
+    const params: any = {
       TableName: SOCIAL_MEDIA_TABLE,
       Key: {
         id: { S: postId },
-        photo_id: { S: photoId}
-      },
-      UpdateExpression: 'SET likes = if_not_exists(likes, :zero) + :increment',
-      ExpressionAttributeValues: {
-        ':increment': { N: '1' },
-        ':zero': { N: '0' }
+        photo_id: { S: photoId }
       },
       ReturnValues: 'ALL_NEW' as const,
     };
-    
+
+    if (hasLiked) {
+      params.UpdateExpression = 'SET likes = if_not_exists(likes, :zero) - :one DELETE liked_by :user';
+      params.ExpressionAttributeValues = {
+        ':one': { N: '1' },
+        ':zero': { N: '0' },
+        ':user': { SS: [userId] }
+      };
+    } else {
+      params.UpdateExpression = 'SET likes = if_not_exists(likes, :zero) + :one ADD liked_by :user';
+      params.ExpressionAttributeValues = {
+        ':one': { N: '1' },
+        ':zero': { N: '0' },
+        ':user': { SS: [userId] }
+      };
+    }
+
     console.log("Like parameters:", JSON.stringify(params, null, 2));
     const command = new UpdateItemCommand(params);
     const result = await client.send(command);
