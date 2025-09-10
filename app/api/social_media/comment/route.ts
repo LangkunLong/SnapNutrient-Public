@@ -22,20 +22,20 @@ export async function POST(req: Request) {
             text
         });
 
-        if (!postId || !text) {
-            return NextResponse.json({ error: "Post ID and text are required" }, { status: 400 });
+        if (!postId || !photo_id || !text) {
+            return NextResponse.json({ error: "Post ID, photo_id and text are required" }, { status: 400 });
         }
 
         const user = session.user.email;
         
         try {
-            // Add the comment using just the postId
+            // Add the comment using the primary key
             const updatedPost = await addComment(postId, photo_id, user, text);
             console.log("Comment added successfully");
             
             // Get the full updated post to return
             try {
-                const fullPost = await getPostById(postId);
+                const fullPost = await getPostById(postId, photo_id);
                 if (fullPost) {
                     return NextResponse.json({ 
                         success: true, 

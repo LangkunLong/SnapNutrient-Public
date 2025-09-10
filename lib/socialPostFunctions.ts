@@ -153,28 +153,29 @@ export async function getAllPosts() {
     }
 }
 
-// Get a single post by post_id, could be used for accessing single entry 
-export async function getPostById(postId: string) {
+// Get a single post by post_id and photo_id
+export async function getPostById(postId: string, photoId: string) {
     const params = {
       TableName: SOCIAL_MEDIA_TABLE,
       Key: {
         id: { S: postId },
+        photo_id: { S: photoId }
       },
     };
-  
+
     try {
-      console.log("Fetching post by id:", postId);
+      console.log("Fetching post by id and photo_id:", postId, photoId);
       const command = new GetItemCommand(params);
       const result = await client.send(command);
-  
+
       if (!result.Item) {
         console.log("Post not found.");
         return null;
       }
-  
+
       return convertDynamoDBToPost(result.Item);
     } catch (error) {
-      console.error("Error fetching post by id:", error);
+      console.error("Error fetching post by id and photo_id:", error);
       throw error;
     }
 }
@@ -267,23 +268,22 @@ export async function likePost(postId: string, photoId: string) {
 
 // Update the addComment function in lib/socialPostFunctions.ts
 
-export async function addComment(postId: string, photo_id: string | undefined, user: string, text: string) {
+export async function addComment(postId: string, photo_id: string, user: string, text: string) {
   const newComment = {
     M: {
       user: { S: user },
       text: { S: text },
     },
   };
-  
-  console.log("Adding comment to post ID:", postId);
-  if (photo_id) console.log("With photo_id:", photo_id);
-  
-  // Create update parameters - only use the primary key
+
+  console.log("Adding comment to post ID:", postId, "photo_id:", photo_id);
+
+  // Create update parameters - include both partition and sort keys
   const params = {
     TableName: SOCIAL_MEDIA_TABLE,
     Key: {
       id: { S: postId },
-      ...(photo_id && { photo_id: { S: photo_id } })
+      photo_id: { S: photo_id }
     },
     UpdateExpression:
     'SET comments = list_append(if_not_exists(comments, :emptyList), :newComment)',
@@ -293,15 +293,15 @@ export async function addComment(postId: string, photo_id: string | undefined, u
     },
     ReturnValues: 'ALL_NEW' as const,
   };
-  
+
   console.log("Updating with params:", JSON.stringify(params, null, 2));
-  
+
   try {
     const command = new UpdateItemCommand(params);
     const result = await client.send(command);
-    
+
     console.log("Update result:", result);
-    
+
     if (result && result.Attributes) {
       console.log("Updated attributes:", result.Attributes);
       return result;
@@ -311,29 +311,30 @@ export async function addComment(postId: string, photo_id: string | undefined, u
     }
   } catch (error) {
     console.error("Error adding comment:", error);
-    
+
     // Log detailed error information
     if (error instanceof Error) {
       console.error("Error message:", error.message);
       console.error("Error stack:", error.stack);
     }
-    
+
     throw error;
   }
 }
   
 // Delete a post by ID:
 // await deletePost("post123");
-export async function deletePost(postId: string) {
+export async function deletePost(postId: string, photoId: string) {
     const params = {
       TableName: SOCIAL_MEDIA_TABLE,
       Key: {
         id: { S: postId },
+        photo_id: { S: photoId }
       },
     };
-  
+
     try {
-      console.log("Deleting post:", postId);
+      console.log("Deleting post:", postId, photoId);
       const command = new DeleteItemCommand(params);
       const result = await client.send(command);
       console.log("Post deleted successfully:", result);
@@ -351,36 +352,32 @@ export async function deletePost(postId: string) {
 //     content: "Another update!", 
 //     picture: "path/to/another-updated-image.jpg" 
 //   });
-export async function editPost(postId: string, updates: { caption?: string; photo_id?: string }) {
-    if (!updates.caption && !updates.photo_id) {
+export async function editPost(postId: string, photoId: string, updates: { caption?: string }) {
+    if (!updates.caption) {
       throw new Error("No updates provided.");
     }
-  
+
     const updateExpressions = [];
     const expressionAttributeValues: Record<string, any> = {};
-  
+
     if (updates.caption) {
       updateExpressions.push("caption = :caption");
       expressionAttributeValues[":caption"] = { S: updates.caption };
     }
-  
-    if (updates.photo_id) {
-      updateExpressions.push("photo_id = :photo_id");
-      expressionAttributeValues[":photo_id"] = { S: updates.photo_id };
-    }
-  
+
     const params = {
       TableName: SOCIAL_MEDIA_TABLE,
       Key: {
         id: { S: postId },
+        photo_id: { S: photoId }
       },
       UpdateExpression: `SET ${updateExpressions.join(", ")}`,
       ExpressionAttributeValues: expressionAttributeValues,
       ReturnValues: "UPDATED_NEW" as ReturnValue,
     };
-  
+
     try {
-      console.log("Editing post:", postId);
+      console.log("Editing post:", postId, photoId);
       const result = await client.send(new UpdateItemCommand(params));
       console.log("Post edited successfully:", result);
       return result;

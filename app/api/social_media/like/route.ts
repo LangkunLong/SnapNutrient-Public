@@ -18,8 +18,8 @@ export async function POST(req: Request) {
         const data = await req.json();
         const { postId, photo_id} = data;
 
-        if (!postId) {
-            return NextResponse.json({ error: "Post ID is required" }, { status: 400 });
+        if (!postId || !photo_id) {
+            return NextResponse.json({ error: "Post ID and photo_id are required" }, { status: 400 });
         }
 
         console.log("Processing like for post:", postId);
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
         // Fallback if Attributes aren't returned - try to get the post
         try {
-            const updatedPost = await getPostById(postId);
+            const updatedPost = await getPostById(postId, photo_id);
             return NextResponse.json({ 
                 success: true, 
                 data: updatedPost
