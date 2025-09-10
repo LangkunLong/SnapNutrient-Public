@@ -155,13 +155,14 @@ export async function GET(req: Request) {
 // export async function GET_BY_ID(req: Request) {
 //     const { searchParams } = new URL(req.url);
 //     const postId = searchParams.get('id');
+//     const photoId = searchParams.get('photo_id');
 
-//     if (!postId) {
-//         return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
+//     if (!postId || !photoId) {
+//         return NextResponse.json({ error: 'Post ID and photo_id are required' }, { status: 400 });
 //     }
 
 //     try {
-//         const post = await getPostById(postId);
+//         const post = await getPostById(postId, photoId);
 //         if (!post) {
 //             return NextResponse.json({ error: 'Post not found' }, { status: 404 });
 //         }
@@ -176,13 +177,14 @@ export async function GET(req: Request) {
 // export async function DELETE(req: Request) {
 //     const { searchParams } = new URL(req.url);
 //     const postId = searchParams.get('id');
+//     const photoId = searchParams.get('photo_id');
 
-//     if (!postId) {
-//         return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
+//     if (!postId || !photoId) {
+//         return NextResponse.json({ error: 'Post ID and photo_id are required' }, { status: 400 });
 //     }
 
 //     try {
-//         await deletePost(postId);
+//         await deletePost(postId, photoId);
 //         return NextResponse.json({ success: true, message: 'Post deleted successfully' });
 //     } catch (error) {
 //         console.error('Error in DELETE /api/social-media:', error);
