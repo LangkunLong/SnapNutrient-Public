@@ -508,7 +508,8 @@ export default function SocialPlatform_tab() {
 
     const isPostLiked = (post: Post): boolean => {
       if (!session?.user?.email) return false;
-      return post.liked_by?.includes(session.user.email);
+      const userEmail = session.user.email!;
+      return post.liked_by?.includes(userEmail);
     };
 
 
@@ -519,6 +520,7 @@ export default function SocialPlatform_tab() {
         alert("You must be logged in to like posts.");
         return;
       }
+      const userEmail = session.user.email!;
 
       const hasLiked = isPostLiked(post);
       const postKey = `${post.id}-${post.photo_id}`;
@@ -535,8 +537,8 @@ export default function SocialPlatform_tab() {
               ...p,
               likes: hasLiked ? p.likes - 1 : p.likes + 1,
               liked_by: hasLiked
-                ? p.liked_by.filter(u => u !== session.user!.email)
-                : [...p.liked_by, session.user!.email]
+              ? p.liked_by.filter(u => u !== userEmail)
+                : [...p.liked_by, userEmail]
             } : p
           )
         );
@@ -546,8 +548,8 @@ export default function SocialPlatform_tab() {
             ...activePost,
             likes: hasLiked ? activePost.likes - 1 : activePost.likes + 1,
             liked_by: hasLiked
-              ? activePost.liked_by.filter(u => u !== session.user!.email)
-              : [...activePost.liked_by, session.user!.email]
+              ? activePost.liked_by.filter(u => u !== userEmail)
+              : [...activePost.liked_by, userEmail]
           });
         }
 
@@ -605,8 +607,8 @@ export default function SocialPlatform_tab() {
               ...p,
               likes: hasLiked ? p.likes + 1 : p.likes - 1,
               liked_by: hasLiked
-                ? [...p.liked_by, session.user!.email]
-                : p.liked_by.filter(u => u !== session.user!.email)
+                ? [...p.liked_by, userEmail]
+                : p.liked_by.filter(u => u !== userEmail)
             } : p
           )
         );
