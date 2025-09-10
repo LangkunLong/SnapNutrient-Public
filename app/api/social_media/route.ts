@@ -4,12 +4,13 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { addPost, getLatestPosts} from "@/lib/socialPostFunctions"
 
 interface SocialMediaTable{
-    id: string; 
-    photo_id: string; 
-    caption: string; 
+    id: string;
+    photo_id: string;
+    caption: string;
     comments: { user: string; text: string }[];
     likes: number;
-    posted_time: string;  
+    liked_by: string[];
+    posted_time: string;
 }
 
 //validate if social post follows format
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
             caption: post.caption,
             comments: post.comments || [],
             likes: post.likes ? parseInt(post.likes, 10) : 0,
+            liked_by: [],
             posted_time: timestamp
         };
         

@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         console.log("Processing like for post:", postId);
 
         // Call the likePost function to update the like count
-        const result = await likePost(postId, photo_id);
+        const result = await likePost(postId, photo_id, session.user.email);
         console.log("Like operation result:", result);
 
         // If successful, return the updated post data
