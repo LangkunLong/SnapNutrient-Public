@@ -127,8 +127,7 @@ export async function analyzeImageWithAssistant(base64Image: any) {
 
 export async function generateWeeklyNutritionInsights(
     nutrientData: Nutrients[],
-    userInfo?: { goal?: string; activityLevel?: string; exerciseHabits?: string }
-) {
+    userInfo?: { goal?: string; activityLevel?: string; exerciseHabits?: string }) {
     let threadId = null;
     console.log('Analyzing weekly nutrition data...');
 
@@ -154,25 +153,24 @@ export async function generateWeeklyNutritionInsights(
         // Compose improved prompt
         const prompt = `Provide personalized nutrient recommendations based on the user's data. Return only valid JSON in the following format:
 
-{
-  "recommendations": {
-    "calories": "string",
-    "protein": "string",
-    "carbohydrates": "string",
-    "fat": "string",
-    "fiber": "string",
-    "sugar": "string",
-    "sodium": "string"
-  }
-}
+            {
+            "recommendations": {
+            "calories": "string",
+            "protein": "string",
+            "carbohydrates": "string",
+            "fat": "string",
+            "fiber": "string",
+            "sugar": "string",
+            "sodium": "string"}
+            }
 
-Weekly nutrient intake summary:
-${JSON.stringify(totals, null, 2)}
+            Weekly nutrient intake summary:
+            ${JSON.stringify(totals, null, 2)}
 
-User goal: ${userInfo?.goal ?? 'not provided'}
-Activity level: ${userInfo?.activityLevel ?? 'not provided'}
-Exercise habits: ${userInfo?.exerciseHabits ?? 'not provided'}
-`;
+            User goal: ${userInfo?.goal ?? 'not provided'}
+            Activity level: ${userInfo?.activityLevel ?? 'not provided'}
+            Exercise habits: ${userInfo?.exerciseHabits ?? 'not provided'}
+            `;
 
         // Step 2: Send Message to AI Assistant
         await openai.beta.threads.messages.create(threadId, {
