@@ -1,14 +1,22 @@
 import OpenAI from 'openai';
-import { threadId } from 'worker_threads';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
     organization: process.env.OPENAI_ORG_ID,
 });
 
-const ASSISTANT_ID = process.env.OPENAI_VLLM_ASSISTANT_ID as string;
 const MEAL_ANALYSIS_ASSISTANT_ID = process.env.OPENAI_MEAL_ANALYSIS_ASSISTANT_ID!;
 const MEAL_RECOMMENDATION_ASSISTANT_ID = process.env.OPENAI_MEAL_RECOMMENDATION_ASSISTANT_ID!;
+
+type Nutrients = {
+    calories: number;
+    protein: number;
+    carbohydrates: number;
+    fat: number;
+    fiber: number;
+    sugar: number;
+    sodium: number;
+};
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,40 +125,55 @@ export async function analyzeImageWithAssistant(base64Image: any) {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function generateWeeklyNutritionInsights(nutrientData: any) {
+export async function generateWeeklyNutritionInsights(
+    nutrientData: Nutrients[],
+    userInfo?: { goal?: string; activityLevel?: string; exerciseHabits?: string }
+) {
     let threadId = null;
     console.log('Analyzing weekly nutrition data...');
 
     try {
+        // Summarize weekly nutrient totals
+        const totals = nutrientData.reduce(
+            (acc: Nutrients, curr: Partial<Nutrients>) => ({
+                calories: acc.calories + (curr.calories ?? 0),
+                protein: acc.protein + (curr.protein ?? 0),
+                carbohydrates: acc.carbohydrates + (curr.carbohydrates ?? 0),
+                fat: acc.fat + (curr.fat ?? 0),
+                fiber: acc.fiber + (curr.fiber ?? 0),
+                sugar: acc.sugar + (curr.sugar ?? 0),
+                sodium: acc.sodium + (curr.sodium ?? 0)
+            }),
+            { calories: 0, protein: 0, carbohydrates: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0 }
+        );
+
         // Step 1: Create a Thread
         const thread = await openai.beta.threads.create();
         threadId = thread.id;
 
-        // Send a Strict Prompt to GPT
-    // Enforce that GPT returns the keys we want, with no extra fields or arrays.
-    const prompt = `
-    You are an assistant analyzing weekly nutrient intake. 
-    Return EXACT JSON with the following structure:
-    
-    {
-        "recommendations": {
-            "calories": "...",
-            "protein": "...",
-            "carbohydrates": "...",
-            "fat": "...",
-            "fiber": "...",
-            "sugar": "...",
-            "sodium": "..."
-        }
-    }
-    
-    No extra keys, no arrays, no markdown. 
-    Replace the dots with concise dietary suggestions.
-    
-    Weekly nutrient data to analyze:
-    ${JSON.stringify(nutrientData, null, 2)}
-    `;
+        // Compose improved prompt
+        const prompt = `Provide personalized nutrient recommendations based on the user's data. Return only valid JSON in the following format:
+
+{
+  "recommendations": {
+    "calories": "string",
+    "protein": "string",
+    "carbohydrates": "string",
+    "fat": "string",
+    "fiber": "string",
+    "sugar": "string",
+    "sodium": "string"
+  }
+}
+
+Weekly nutrient intake summary:
+${JSON.stringify(totals, null, 2)}
+
+User goal: ${userInfo?.goal ?? 'not provided'}
+Activity level: ${userInfo?.activityLevel ?? 'not provided'}
+Exercise habits: ${userInfo?.exerciseHabits ?? 'not provided'}
+`;
+
         // Step 2: Send Message to AI Assistant
         await openai.beta.threads.messages.create(threadId, {
             role: "user",
@@ -165,7 +188,7 @@ export async function generateWeeklyNutritionInsights(nutrientData: any) {
         console.log('Thread created:', threadId);
 
         // Step 3: Start AI Processing
-        const run = await openai.beta.threads.runs.create(threadId, { assistant_id: ASSISTANT_ID });
+        const run = await openai.beta.threads.runs.create(threadId, { assistant_id: MEAL_RECOMMENDATION_ASSISTANT_ID });
         let runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
 
         // Step 4: Wait for AI Completion
