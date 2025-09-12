@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { threadId } from 'worker_threads';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -6,6 +7,9 @@ const openai = new OpenAI({
 });
 
 const ASSISTANT_ID = process.env.OPENAI_VLLM_ASSISTANT_ID as string;
+const MEAL_ANALYSIS_ASSISTANT_ID = process.env.OPENAI_MEAL_ANALYSIS_ASSISTANT_ID!;
+const MEAL_RECOMMENDATION_ASSISTANT_ID = process.env.OPENAI_MEAL_RECOMMENDATION_ASSISTANT_ID!;
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function uploadFile(base64Image: any) {
@@ -36,33 +40,30 @@ export async function analyzeImageWithAssistant(base64Image: any) {
     console.log('Analyzing image...');
     try {
         fileId = await uploadFile(base64Image);
+
+        // 1. Create a new thread
         const thread = await openai.beta.threads.create();
 
-        await openai.beta.threads.messages.create(
-            thread.id,
+        // 2. Add a user message (with the image + prompt)
+        await openai.beta.threads.messages.create(thread.id, {
+        role: "user",
+        content: [
             {
-                role: "user",
-                content: [
-                    {
-                        type: "text",
-                        text: "Analyze this image and provide the results in a JSON format."
-                    },
-                    {
-                        type: "image_file",
-                        image_file: { file_id: fileId }
-                    }
-                ]
+            type: "text",
+            text: "Analyze this image and provide the results in a JSON format."
+            },
+            {
+            type: "image_file",
+            image_file: { file_id: fileId }
             }
-        );
-        console.log('Thread created:', thread.id);
+        ]
+        });
 
-        // const run = await openai.beta.threads.runs.create(thread.id, {
-        //     assistant_id: ASSISTANT_ID
-        // });
-        const run = await openai.beta.threads.runs.create(
-            thread.id,
-            { assistant_id: ASSISTANT_ID }
-          );
+        // 3. Then create a run to trigger the assistant
+        const run = await openai.beta.threads.runs.create(thread.id, {
+        assistant_id: MEAL_ANALYSIS_ASSISTANT_ID,
+        });
+        
         let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
         while (runStatus.status === 'queued' || runStatus.status === 'in_progress') {
             await new Promise(resolve => setTimeout(resolve, 1000));
