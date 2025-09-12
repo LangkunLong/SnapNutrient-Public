@@ -190,7 +190,10 @@ const CameraTab = () => {
 
       const result = await response.json();
       console.log('Analysis result:', result);
-      setAnalysisResult(result.response);
+      setAnalysisResult({
+        name: result.response.name ?? '',
+        nutrients: result.response.nutrients ?? result.response
+      });
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message || 'An unexpected error occurred');
