@@ -9,6 +9,7 @@ import SocialHeader from "@/components/ui/social_header";
 import Footer from "@/components/ui/social_footer";
 import { Camera } from 'lucide-react';
 import { useState, useRef, useEffect } from "react";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from "next-auth/react";
 import InstagramUploadModal from '@/components/ui/social_upload_modal';
 import { dietAPI_helper } from "@/app/lib/dietAPIHelper/helperFunctions";
@@ -79,36 +80,65 @@ export default function SocialPlatformClient({
   initialPosts: Post[];
   initialLastKey: string | null;
 }) {
-
-    const [posts, setPosts] = useState<Post[]>(initialPosts);
-    const [activePost, setActivePost] = useState<Post | null>(null); //track the active post for viewing comments
-    const commentPopupRef = useRef<HTMLDivElement | null>(null); //reference modal container
-    const [loading, setLoading] = useState(initialPosts.length === 0);
-    const [showUploadModal, setShowUploadModal] = useState(false);
-    const { data: session } = useSession();
-    const [userDataMap, setUserDataMap] = useState<Record<string, UserData>>({});
-    const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
-
     const [hasMore, setHasMore] = useState(Boolean(initialLastKey));
     const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(initialLastKey);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const observerTarget = useRef<HTMLDivElement | null>(null);
 
-    //Intersection Observer to detect when user scrolls to the bottom
-    useEffect(() => {
-      if (initialPosts.length === 0) {
-        // Initial fetch of posts when none provided by SSR
-        fetchPosts();
+    const queryClient = useQueryClient();
+
+    const fetchInitialPosts = async (): Promise<Post[]> => {
+      try {
+        const url = `/api/social_media/hydrated?limit=10`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+        const postsData = await response.json();
+        setLastEvaluatedKey(postsData.lastEvaluatedKey || null);
+        setHasMore(!!postsData.lastEvaluatedKey && postsData.data && postsData.data.length === 10);
+        const postsWithFallback: Post[] = postsData.data.map((post: Partial<Post>) => ({
+          id: post.id as string,
+          user: post.user || 'User',
+          profile_pic: post.profile_pic || default_profile_pic,
+          caption: post.caption || '',
+          photo_id: post.photo_id || '',
+          picture: post.picture || default_social_pic,
+          likes:
+            typeof post.likes === 'number'
+              ? post.likes
+              : parseInt(String(post.likes), 10) || 0,
+          liked_by: post.liked_by || [],
+          comments: post.comments || [],
+          posted_time: post.posted_time || '',
+        }));
+        return postsWithFallback;
+      } catch (error: any) {
+        console.error('Error fetching posts:', error);
+        return [];
       }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    };
+
+    const { data: posts = [], isLoading } = useQuery<Post[]>({
+      queryKey: ['socialPosts'],
+      queryFn: fetchInitialPosts,
+      initialData: initialPosts,
+    });
+
+    const [activePost, setActivePost] = useState<Post | null>(null); //track the active post for viewing comments
+    const commentPopupRef = useRef<HTMLDivElement | null>(null); //reference modal container
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const { data: session } = useSession();
+    const [userDataMap, setUserDataMap] = useState<Record<string, UserData>>({});
+    const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
 
     // Set up the Intersection Observer for infinite scrolling
     useEffect(() => {
       const observer = new IntersectionObserver(
         entries => {
-          if (entries[0].isIntersecting && hasMore && !isLoadingMore && !loading) {
-            fetchPosts(10, true);
+          if (entries[0].isIntersecting && hasMore && !isLoadingMore && !isLoading) {
+            fetchMorePosts(10);
           }
         },
         { threshold: 1.0 } // Trigger when 100% of the target is visible
@@ -125,7 +155,7 @@ export default function SocialPlatformClient({
           observer.unobserve(currentObserverTarget);
         }
       };
-    }, [hasMore, isLoadingMore, loading, lastEvaluatedKey]);
+    }, [hasMore, isLoadingMore, isLoading, lastEvaluatedKey]);
 
     // handle uploading a new post
     const renderUploadModal = () => {
@@ -274,14 +304,14 @@ export default function SocialPlatformClient({
           };
           
           // update the React component status
-          setPosts([completeNewPost, ...posts]);
-          
+          queryClient.setQueryData<Post[]>(['socialPosts'], current => [completeNewPost, ...(current || [])]);
+
           // Close the upload modal
           setShowUploadModal(false);
-          
+
           // Refresh the posts to ensure everything is up to date
           // This will refetch all posts and ensure likes and comments work
-          fetchPosts();
+          queryClient.invalidateQueries({ queryKey: ['socialPosts'] });
           
         } catch (error: any) {
           console.error("Error posting:", error);
@@ -325,42 +355,27 @@ export default function SocialPlatformClient({
       }
     };
 
-    // Fetch posts from server-side hydrated endpoint
-
-const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
-  if (loadMore) {
-    if (isLoadingMore || !hasMore) return;
-    setIsLoadingMore(true);
-  } else {
-    setLoading(true);
-  }
-
+    // Fetch additional posts when scrolling
+const fetchMorePosts = async (limit: number = 10) => {
+  if (isLoadingMore || !hasMore) return;
+  setIsLoadingMore(true);
   try {
     let url = `/api/social_media/hydrated?limit=${limit}`;
-    if (loadMore && lastEvaluatedKey) {
+    if (lastEvaluatedKey) {
       url += `&lastKey=${encodeURIComponent(lastEvaluatedKey)}`;
     }
-
     const response = await fetch(url);
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
-
     const postsData = await response.json();
-
     setLastEvaluatedKey(postsData.lastEvaluatedKey || null);
     setHasMore(!!postsData.lastEvaluatedKey && postsData.data && postsData.data.length === limit);
-
     if (!postsData.data || !Array.isArray(postsData.data) || postsData.data.length === 0) {
-      if (!loadMore) {
-        setPosts([]);
-      }
-      setLoading(false);
       setIsLoadingMore(false);
       return;
     }
-
     const postsWithFallback: Post[] = postsData.data.map((post: Partial<Post>) => ({
       id: post.id as string,
       user: post.user || 'User',
@@ -376,16 +391,10 @@ const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
       comments: post.comments || [],
       posted_time: post.posted_time || '',
     }));
-
-    if (loadMore) {
-      setPosts(currentPosts => [...currentPosts, ...postsWithFallback]);
-    } else {
-      setPosts(postsWithFallback);
-    }
+    queryClient.setQueryData<Post[]>(['socialPosts'], current => [...(current || []), ...postsWithFallback]);
   } catch (error: any) {
     console.error('Error fetching posts:', error);
   } finally {
-    setLoading(false);
     setIsLoadingMore(false);
   }
 };
@@ -426,13 +435,13 @@ const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
         console.log("Toggling like for post:", post.id, "photo:", post.photo_id);
 
         // Optimistically update UI
-        setPosts(currentPosts =>
-          currentPosts.map(p =>
+        queryClient.setQueryData<Post[]>(['socialPosts'], currentPosts =>
+          (currentPosts || []).map(p =>
             (p.id === post.id && p.photo_id === post.photo_id) ? {
               ...p,
               likes: hasLiked ? p.likes - 1 : p.likes + 1,
               liked_by: hasLiked
-              ? p.liked_by.filter(u => u !== userEmail)
+                ? p.liked_by.filter(u => u !== userEmail)
                 : [...p.liked_by, userEmail]
             } : p
           )
@@ -474,8 +483,8 @@ const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
           const serverLikeCount = attrs.likes && attrs.likes.N ? parseInt(attrs.likes.N, 10) : 0;
           const serverLikedBy = attrs.liked_by && attrs.liked_by.SS ? attrs.liked_by.SS : [];
 
-          setPosts(currentPosts =>
-            currentPosts.map(p =>
+          queryClient.setQueryData<Post[]>(['socialPosts'], currentPosts =>
+            (currentPosts || []).map(p =>
               (p.id === post.id && p.photo_id === post.photo_id) ? {
                 ...p,
                 likes: serverLikeCount,
@@ -496,8 +505,8 @@ const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
         console.error("Error liking post:", error);
 
         // Revert the optimistic update if there was an error
-        setPosts(currentPosts =>
-          currentPosts.map(p =>
+        queryClient.setQueryData<Post[]>(['socialPosts'], currentPosts =>
+          (currentPosts || []).map(p =>
             (p.id === post.id && p.photo_id === post.photo_id) ? {
               ...p,
               likes: hasLiked ? p.likes + 1 : p.likes - 1,
@@ -545,10 +554,9 @@ const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
         
         // Optimistically update the UI first
         // 1. Update ONLY the specific post in the posts array
-        setPosts(currentPosts => {
-          return currentPosts.map(post => {
+        queryClient.setQueryData<Post[]>(['socialPosts'], currentPosts => {
+          return (currentPosts || []).map(post => {
             if (post.id === postId && post.photo_id === s3_key) {
-              // Create a new array with the existing comments and the new one
               const updatedComments = [...(post.comments || []), newComment];
               return {
                 ...post,
@@ -611,10 +619,10 @@ const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
             user: userMap[comment.user] || comment.user,
             text: comment.text
           }));
-          
+
           // Update ONLY the specific post with formatted comments
-          setPosts(currentPosts => {
-            return currentPosts.map(post => {
+          queryClient.setQueryData<Post[]>(['socialPosts'], currentPosts => {
+            return (currentPosts || []).map(post => {
               if (post.id === postId && post.photo_id === s3_key) {
                 return {
                   ...post,
@@ -638,7 +646,7 @@ const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
         alert("Failed to add comment. Please try again.");
         
         // Revert the optimistic update by refreshing posts
-        fetchPosts();
+        queryClient.invalidateQueries({ queryKey: ['socialPosts'] });
       }
     };
 
@@ -682,12 +690,6 @@ const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
         setActivePost(null); //Close popeu
       }
     }
-
-    //set up event listener when modal is created and removes listener when popup is closed
-    //also fetch post from database
-    useEffect(() => {
-      fetchPosts();
-    }, []);
 
     // 🔹 Handle clicking outside of the comment modal
     useEffect(() => {
