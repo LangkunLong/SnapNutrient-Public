@@ -53,12 +53,9 @@ export async function POST(req: Request) {
 
            // Expect the assistant response to include name and nutrients
             const raw = (result as any).response || {};
-            if (typeof raw.name !== 'string' || typeof raw.nutrients !== 'object') {
-                throw new Error('Invalid response format: expected name and nutrients');
-            }
-            const nutrientSource = raw.nutrients;
+            const nutrientSource = raw.nutrients || raw;
             const normalizedResponse = {
-                name: raw.name,
+                name: typeof raw.name === 'string' ? raw.name : 'Meal Entry',
                 calories: Number(nutrientSource.calories) || 0,
                 protein: Number(nutrientSource.protein) || 0,
                 carbohydrates: Number(nutrientSource.carbohydrates) || 0,
