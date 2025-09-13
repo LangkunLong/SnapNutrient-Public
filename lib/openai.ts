@@ -58,7 +58,7 @@ export async function analyzeImageWithAssistant(base64Image: any) {
         content: [
             {
             type: "text",
-            text: "Analyze this image and provide the results in a JSON format."
+            text: "Analyze this image and return JSON with a descriptive `name` and a `nutrients` object containing calories, protein, carbohydrates, fat, fiber, sugar, and sodium."
             },
             {
             type: "image_file",

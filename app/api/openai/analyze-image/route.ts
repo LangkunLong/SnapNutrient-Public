@@ -51,12 +51,14 @@ export async function POST(req: Request) {
                 throw new Error('Invalid response from OpenAI assistant');
             }
 
-            // Normalize the assistant response to always return
-            // { name: string, nutrients: { ... } }
+           // Expect the assistant response to include name and nutrients
             const raw = (result as any).response || {};
-            const nutrientSource = raw.nutrients || raw;
+            if (typeof raw.name !== 'string' || typeof raw.nutrients !== 'object') {
+                throw new Error('Invalid response format: expected name and nutrients');
+            }
+            const nutrientSource = raw.nutrients;
             const normalizedResponse = {
-                name: typeof raw.name === 'string' ? raw.name : '',
+                name: raw.name,
                 nutrients: {
                     calories: Number(nutrientSource.calories) || 0,
                     protein: Number(nutrientSource.protein) || 0,
