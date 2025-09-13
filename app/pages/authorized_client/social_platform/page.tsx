@@ -383,62 +383,75 @@ export default function SocialPlatform_tab() {
           return;
         }
     
-        // Batch all image keys into a single request
+        // Batch all image keys and user ids from posts
         const imageKeys: string[] = postsData.data
           .map((post: Post) => post.photo_id)
           .filter((key: string | undefined): key is string => !!key);
         console.log("Image Keys Sent to API:", imageKeys);
         
-        // Get all presigned URLs in a single request
-        const imageUrlMap: Record<string, string> = {};
-        
-        if (imageKeys.length > 0) {
-          try {
-            const presignedUrlResponse = await fetch('/api/get-batch-image-urls', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                keys: imageKeys
-              }),
-            });
-            
-            if (presignedUrlResponse.ok) {
-              const responseData = await presignedUrlResponse.json();
-              
-              if (responseData.urls && Array.isArray(responseData.urls)) {
-                responseData.urls.forEach((urlItem: { key: string; url: string }) => {
-                  if (urlItem && urlItem.key && urlItem.url) {
-                  imageUrlMap[urlItem.key] = urlItem.url;
-                  }
-                });
-              }
-            }
-          } catch (error) {
-            console.error('Error fetching image URLs:', error);
-          }
-        }
-        
-        // Collect all unique user IDs from posts
         const userIds: string[] = [...new Set((postsData.data as Post[]).map((post) => post.id))];
+
+        // Helper to fetch all image URLs in one request
+        const fetchImageUrls = async (): Promise<Record<string, string>> => {
+          if (imageKeys.length === 0) return {};
+          const presignedUrlResponse = await fetch('/api/get-batch-image-urls', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ keys: imageKeys }),
+          });
+
+          if (!presignedUrlResponse.ok) {
+            throw new Error('Failed to fetch image URLs');
+          }
+
+          const responseData = await presignedUrlResponse.json();
+          const urlMap: Record<string, string> = {};
+
+          if (responseData.urls && Array.isArray(responseData.urls)) {
+            responseData.urls.forEach((urlItem: { key: string; url: string }) => {
+              if (urlItem && urlItem.key && urlItem.url) {
+                urlMap[urlItem.key] = urlItem.url;
+              }
+             });
+          }
+          return urlMap;
+        };
         
-        // Fetch user data for all posts
+        // Prepare user data fetches
         const userDataPromises = userIds
           .filter((userId): userId is string => typeof userId === 'string')
           .map(userId => fetchUserData(userId));
-        const userDataResults = await Promise.all(userDataPromises);
         
-        // Create a map of user IDs to user data
+        // Fetch image URLs and user data in parallel
+        const [imageUrlsResult, userResults] = await Promise.allSettled([
+          fetchImageUrls(),
+          Promise.allSettled(userDataPromises),
+        ]);
+
+        // Process image URLs
+        const imageUrlMap: Record<string, string> = {};
+        if (imageUrlsResult.status === 'fulfilled') {
+          Object.assign(imageUrlMap, imageUrlsResult.value);
+        } else {
+          console.error('Error fetching image URLs:', imageUrlsResult.reason);
+        }
+
+        // Process user data
         const newUserDataMap: Record<string, UserData> = {};
-        userDataResults.forEach(userData => {
-          if (userData) {
-            newUserDataMap[userData.id] = userData;
-          }
-        });
+        if (userResults.status === 'fulfilled') {
+          userResults.value.forEach(result => {
+            if (result.status === 'fulfilled' && result.value) {
+              newUserDataMap[result.value.id] = result.value;
+            }
+          });
+        } else {
+          console.error('Error resolving user data:', userResults.reason);
+        }
         
         // Update our userDataMap with new user data
-        setUserDataMap(prevMap => ({...prevMap, ...newUserDataMap}));
+        setUserDataMap(prevMap => ({ ...prevMap, ...newUserDataMap }));
         
         // Map posts with user data and image URLs
         interface PostWithData extends Post {
@@ -493,15 +506,16 @@ export default function SocialPlatform_tab() {
           }
           
           return {
-            ...post,
-            user: userData.name || 'User',
-            profile_pic: profilePicUrl,
-            picture: post.photo_id && imageUrlMap[post.photo_id]
-              ? imageUrlMap[post.photo_id]
-              : default_social_pic,
-            likes: likesCount,
-            liked_by: post.liked_by || []
-          };
+              ...post,
+              caption: post.caption || '',
+              user: userData.name || 'User',
+              profile_pic: profilePicUrl,
+              picture: post.photo_id && imageUrlMap[post.photo_id]
+                ? imageUrlMap[post.photo_id]
+                : default_social_pic,
+              likes: likesCount,
+              liked_by: post.liked_by || []
+            };
         }));
     
         // The key change: if loading more, append to existing posts instead of replacing
