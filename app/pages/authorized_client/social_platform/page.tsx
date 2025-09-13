@@ -12,6 +12,7 @@ import { useState, useRef, useEffect} from "react";
 import {useSession} from "next-auth/react"
 import InstagramUploadModal from '@/components/ui/social_upload_modal';
 import { dietAPI_helper } from "@/app/lib/dietAPIHelper/helperFunctions";
+import { useQueryClient } from '@tanstack/react-query';
 
 // display post on front end ui
 interface Post {
@@ -88,10 +89,22 @@ export default function SocialPlatform_tab() {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const observerTarget = useRef<HTMLDivElement | null>(null);
 
+    const queryClient = useQueryClient();
+    const updateCache = (updatedPosts: Post[], hasMoreVal: boolean = hasMore, lastKey: string | null = lastEvaluatedKey) => {
+      queryClient.setQueryData(['posts'], { posts: updatedPosts, hasMore: hasMoreVal, lastEvaluatedKey: lastKey });
+    };
+
     //Intersection Observer to detect when user scrolls to the bottom
     useEffect(() => {
-      // Initial fetch of posts
-      fetchPosts();
+      const cached = queryClient.getQueryData<{ posts: Post[]; hasMore: boolean; lastEvaluatedKey: string | null }>(['posts']);
+      if (cached) {
+        setPosts(cached.posts);
+        setHasMore(cached.hasMore);
+        setLastEvaluatedKey(cached.lastEvaluatedKey);
+        setLoading(false);
+      } else {
+        fetchPosts();
+      }
     }, []);
 
     // Set up the Intersection Observer for infinite scrolling
@@ -265,14 +278,14 @@ export default function SocialPlatform_tab() {
           };
           
           // update the React component status
-          setPosts([completeNewPost, ...posts]);
-          
+          setPosts(prev => {
+            const updated = [completeNewPost, ...prev];
+            updateCache(updated);
+            return updated;
+          });
+
           // Close the upload modal
           setShowUploadModal(false);
-          
-          // Refresh the posts to ensure everything is up to date
-          // This will refetch all posts and ensure likes and comments work
-          fetchPosts();
           
         } catch (error: any) {
           console.error("Error posting:", error);
@@ -326,6 +339,14 @@ export default function SocialPlatform_tab() {
         if (isLoadingMore || !hasMore) return; // Prevent multiple simultaneous requests
         setIsLoadingMore(true);
       } else {
+        const cached = queryClient.getQueryData<{ posts: Post[]; hasMore: boolean; lastEvaluatedKey: string | null }>(['posts']);
+        if (cached) {
+          setPosts(cached.posts);
+          setHasMore(cached.hasMore);
+          setLastEvaluatedKey(cached.lastEvaluatedKey);
+          setLoading(false);
+          return;
+        }
         setLoading(true);
       }
     
@@ -345,15 +366,17 @@ export default function SocialPlatform_tab() {
         const postsData = await response.json();
         console.log("Posts data from DynamoDB:", postsData);
         
-        // Update the lastEvaluatedKey for next pagination request
-        setLastEvaluatedKey(postsData.lastEvaluatedKey || null);
-        
-        // If no more posts or no lastEvaluatedKey, we've reached the end
-        setHasMore(!!postsData.lastEvaluatedKey && postsData.data && postsData.data.length === limit);
+        const newLastKey = postsData.lastEvaluatedKey || null;
+        const hasMoreVal = !!postsData.lastEvaluatedKey && postsData.data && postsData.data.length === limit;
+        setLastEvaluatedKey(newLastKey);
+        setHasMore(hasMoreVal);
     
         if (!postsData.data || !Array.isArray(postsData.data) || postsData.data.length === 0) {
           if (!loadMore) {
             setPosts([]);
+            updateCache([], false, null);
+            setHasMore(false);
+            setLastEvaluatedKey(null);
           }
           setLoading(false);
           setIsLoadingMore(false);
@@ -483,9 +506,16 @@ export default function SocialPlatform_tab() {
     
         // The key change: if loading more, append to existing posts instead of replacing
         if (loadMore) {
-          setPosts(currentPosts => [...currentPosts, ...postsWithData]);
+          setPosts(currentPosts => {
+            const updated = [...currentPosts, ...postsWithData];
+            updateCache(updated, hasMoreVal, newLastKey);
+            return updated;
+          });
         } else {
-          setPosts(postsWithData);
+          setPosts(() => {
+            updateCache(postsWithData, hasMoreVal, newLastKey);
+            return postsWithData;
+          });
         }
       } catch (error: any) {
         console.error('Error fetching posts:', error);
@@ -531,8 +561,8 @@ export default function SocialPlatform_tab() {
         console.log("Toggling like for post:", post.id, "photo:", post.photo_id);
 
         // Optimistically update UI
-        setPosts(currentPosts =>
-          currentPosts.map(p =>
+        setPosts(currentPosts => {
+          const updated = currentPosts.map(p =>
             (p.id === post.id && p.photo_id === post.photo_id) ? {
               ...p,
               likes: hasLiked ? p.likes - 1 : p.likes + 1,
@@ -540,8 +570,10 @@ export default function SocialPlatform_tab() {
               ? p.liked_by.filter(u => u !== userEmail)
                 : [...p.liked_by, userEmail]
             } : p
-          )
-        );
+          );
+          updateCache(updated);
+          return updated;
+        });
 
         if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
           setActivePost({
@@ -579,15 +611,17 @@ export default function SocialPlatform_tab() {
           const serverLikeCount = attrs.likes && attrs.likes.N ? parseInt(attrs.likes.N, 10) : 0;
           const serverLikedBy = attrs.liked_by && attrs.liked_by.SS ? attrs.liked_by.SS : [];
 
-          setPosts(currentPosts =>
-            currentPosts.map(p =>
+          setPosts(currentPosts => {
+            const updated = currentPosts.map(p =>
               (p.id === post.id && p.photo_id === post.photo_id) ? {
                 ...p,
                 likes: serverLikeCount,
                 liked_by: serverLikedBy
               } : p
-            )
-          );
+            );
+            updateCache(updated);
+            return updated;
+          });
 
           if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
             setActivePost({
@@ -601,8 +635,8 @@ export default function SocialPlatform_tab() {
         console.error("Error liking post:", error);
 
         // Revert the optimistic update if there was an error
-        setPosts(currentPosts =>
-          currentPosts.map(p =>
+        setPosts(currentPosts => {
+          const updated = currentPosts.map(p =>
             (p.id === post.id && p.photo_id === post.photo_id) ? {
               ...p,
               likes: hasLiked ? p.likes + 1 : p.likes - 1,
@@ -610,8 +644,10 @@ export default function SocialPlatform_tab() {
                 ? [...p.liked_by, userEmail]
                 : p.liked_by.filter(u => u !== userEmail)
             } : p
-          )
-        );
+          );
+          updateCache(updated);
+          return updated;
+        });
 
         if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
           setActivePost({
@@ -651,7 +687,7 @@ export default function SocialPlatform_tab() {
         // Optimistically update the UI first
         // 1. Update ONLY the specific post in the posts array
         setPosts(currentPosts => {
-          return currentPosts.map(post => {
+          const updated = currentPosts.map(post => {
             if (post.id === postId && post.photo_id === s3_key) {
               // Create a new array with the existing comments and the new one
               const updatedComments = [...(post.comments || []), newComment];
@@ -662,6 +698,8 @@ export default function SocialPlatform_tab() {
             }
             return post;
           });
+          updateCache(updated);
+          return updated;
         });
         
         // 2. Update the active post if it's the one being commented on
@@ -719,7 +757,7 @@ export default function SocialPlatform_tab() {
           
           // Update ONLY the specific post with formatted comments
           setPosts(currentPosts => {
-            return currentPosts.map(post => {
+            const updated = currentPosts.map(post => {
               if (post.id === postId && post.photo_id === s3_key) {
                 return {
                   ...post,
@@ -728,6 +766,8 @@ export default function SocialPlatform_tab() {
               }
               return post;
             });
+            updateCache(updated);
+            return updated;
           });
           
           // Update active post with formatted comments if needed
@@ -789,10 +829,6 @@ export default function SocialPlatform_tab() {
     }
 
     //set up event listener when modal is created and removes listener when popup is closed
-    //also fetch post from database
-    useEffect(() => {
-      fetchPosts();
-    }, []);
 
     // 🔹 Handle clicking outside of the comment modal
     useEffect(() => {

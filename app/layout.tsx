@@ -2,6 +2,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import PWAInstallPrompt from '@/components/PWAInstallPrompt'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from '@/store/queryClient'
 
 const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
@@ -32,16 +34,18 @@ export default function RootLayout(
         <meta name="google-site-verification" content="Fd0LlHOUe87w7f6ufaa3iz9IXj-2HNbDpxSsHsWzrrA" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <div className="min-h-screen flex flex-col">
-            <main className="flex-grow w-full">
-              <div>
-                <PWAInstallPrompt />
-                {children}
-              </div>
-            </main>
-          </div>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <div className="min-h-screen flex flex-col">
+              <main className="flex-grow w-full">
+                <div>
+                  <PWAInstallPrompt />
+                  {children}
+                </div>
+              </main>
+            </div>
+          </AuthProvider>
+        </QueryClientProvider>
       </body>
     </html>
   )
