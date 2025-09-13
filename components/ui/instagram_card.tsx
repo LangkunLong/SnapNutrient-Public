@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 // Format the timestamp into a readable date
 const formatDate = (timestamp: string) => {
@@ -35,10 +36,14 @@ const CardHeader = React.forwardRef<
     {...props}
   >
     {/* Profile Picture */}
-    <img
-      src= {profilePic}
+    <Image
+      src={profilePic}
       alt="Profile"
+      width={40}
+      height={40}
       className="w-10 h-10 rounded-full mr-3" // Round profile picture
+      placeholder="blur"
+      blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/xcAArMBxNoNfWQAAAAASUVORK5CYII="
     />
     {/* Username */}
     <span className="font-semibold text-black">{user}</span>
