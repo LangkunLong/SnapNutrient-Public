@@ -1,10 +1,17 @@
 import SocialPlatformClient, { type Post } from "./SocialPlatformClient";
+import {headers} from "next/headers"
 
 async function getInitialPosts(): Promise<{ posts: Post[]; lastKey: string | null }> {
   try {
+    const headerList = await headers();
+    const protocol = headerList.get("x-forwarded-proto") || "http";
+    const host = headerList.get("host");
+    const baseUrl =
+      process.env.NEXTAUTH_URL ||
+      (host ? `${protocol}://${host}` : "http://localhost:3000");
     const res = await fetch(
-      `${process.env.NEXTAUTH_URL || ''}/api/social_media/hydrated?limit=10`,
-      { cache: 'no-store' }
+      `${baseUrl}/api/social_media/hydrated?limit=10`,
+      { cache: "no-store" }
     );
     if (!res.ok) {
       throw new Error('Failed to fetch posts');
