@@ -325,14 +325,10 @@ export default function SocialPlatformClient({
       }
     };
 
-    // calls GET in route.ts, gets the latest 10 posts
-    // gets the image keys from dynamoDB, then gets the images from s3 bucket
-    // obtaining all the imagekeys in batch and send 1 request
-    // Improved fetchPosts function to better handle image URLs
-    // Modify fetchPosts function to include user data
+    // Fetch posts from server-side hydrated endpoint
     const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
       if (loadMore) {
-        if (isLoadingMore || !hasMore) return; // Prevent multiple simultaneous requests
+        if (isLoadingMore || !hasMore) return;
         setIsLoadingMore(true);
       } else {
         setLoading(true);
@@ -340,20 +336,18 @@ export default function SocialPlatformClient({
     
       try {
         // Add lastEvaluatedKey to the request if we're loading more posts
-        let url = `/api/social_media?limit=${limit}`;
+        let url = `/api/social_media/hydrated?limit=${limit}`;
         if (loadMore && lastEvaluatedKey) {
           url += `&lastKey=${encodeURIComponent(lastEvaluatedKey)}`;
         }
     
-        // First get the posts data from DynamoDB
         const response = await fetch(url);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
         const postsData = await response.json();
-        console.log("Posts data from DynamoDB:", postsData);
-        
+    
         // Update the lastEvaluatedKey for next pagination request
         setLastEvaluatedKey(postsData.lastEvaluatedKey || null);
         
@@ -368,6 +362,18 @@ export default function SocialPlatformClient({
           setIsLoadingMore(false);
           return;
         }
+        const postsWithFallback: Post[] = postsData.data.map((post: Partial<Post>) => ({
+          id: post.id as string,
+          user: post.user || 'User',
+          profile_pic: post.profile_pic || default_profile_pic,
+          caption: post.caption || '',
+          photo_id: post.photo_id || '',
+          picture: post.picture || default_social_pic,
+          likes: typeof post.likes === 'number' ? post.likes : parseInt(String(post.likes), 10) || 0,
+          liked_by: post.liked_by || [],
+          comments: post.comments || [],
+          posted_time: post.posted_time || '',
+        }));
     
         // Batch all image keys into a single request
         const imageKeys: string[] = postsData.data
