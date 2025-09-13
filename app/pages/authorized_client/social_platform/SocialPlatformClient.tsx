@@ -4,18 +4,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
-import { Card, CardHeader, CardImage, CardActions, CardCaption, CardDate} from '@/components/ui/instagram_card'; 
-import SocialHeader from "@/components/ui/social_header"
+import { Card, CardHeader, CardImage, CardActions, CardCaption, CardDate } from '@/components/ui/instagram_card';
+import SocialHeader from "@/components/ui/social_header";
 import Footer from "@/components/ui/social_footer";
 import { Camera } from 'lucide-react';
-import { useState, useRef, useEffect} from "react";
-import {useSession} from "next-auth/react"
+import { useState, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import InstagramUploadModal from '@/components/ui/social_upload_modal';
 import { dietAPI_helper } from "@/app/lib/dietAPIHelper/helperFunctions";
-import { useQueryClient } from '@tanstack/react-query';
 
 // display post on front end ui
-interface Post {
+export interface Post {
   id: string; // user email
   user: string; // from user profile - currently not displayed
   profile_pic: string; //from user profile - currently using default
@@ -73,38 +72,35 @@ const default_social_pic =  '/images/hero-meal.jpg';
     //     }
     // ];
 
-export default function SocialPlatform_tab() {
+export default function SocialPlatformClient({
+  initialPosts = [],
+  initialLastKey = null,
+}: {
+  initialPosts: Post[];
+  initialLastKey: string | null;
+}) {
 
-    const [posts, setPosts] = useState<Post[]>([]);
+    const [posts, setPosts] = useState<Post[]>(initialPosts);
     const [activePost, setActivePost] = useState<Post | null>(null); //track the active post for viewing comments
     const commentPopupRef = useRef<HTMLDivElement | null>(null); //reference modal container
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(initialPosts.length === 0);
     const [showUploadModal, setShowUploadModal] = useState(false);
-    const {data: session} = useSession();
+    const { data: session } = useSession();
     const [userDataMap, setUserDataMap] = useState<Record<string, UserData>>({});
     const [likeLoading, setLikeLoading] = useState<Record<string, boolean>>({});
 
-    const [hasMore, setHasMore] = useState(true);
-    const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
+    const [hasMore, setHasMore] = useState(Boolean(initialLastKey));
+    const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(initialLastKey);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const observerTarget = useRef<HTMLDivElement | null>(null);
 
-    const queryClient = useQueryClient();
-    const updateCache = (updatedPosts: Post[], hasMoreVal: boolean = hasMore, lastKey: string | null = lastEvaluatedKey) => {
-      queryClient.setQueryData(['posts'], { posts: updatedPosts, hasMore: hasMoreVal, lastEvaluatedKey: lastKey });
-    };
-
     //Intersection Observer to detect when user scrolls to the bottom
     useEffect(() => {
-      const cached = queryClient.getQueryData<{ posts: Post[]; hasMore: boolean; lastEvaluatedKey: string | null }>(['posts']);
-      if (cached) {
-        setPosts(cached.posts);
-        setHasMore(cached.hasMore);
-        setLastEvaluatedKey(cached.lastEvaluatedKey);
-        setLoading(false);
-      } else {
+      if (initialPosts.length === 0) {
+        // Initial fetch of posts when none provided by SSR
         fetchPosts();
       }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Set up the Intersection Observer for infinite scrolling
@@ -278,14 +274,14 @@ export default function SocialPlatform_tab() {
           };
           
           // update the React component status
-          setPosts(prev => {
-            const updated = [completeNewPost, ...prev];
-            updateCache(updated);
-            return updated;
-          });
-
+          setPosts([completeNewPost, ...posts]);
+          
           // Close the upload modal
           setShowUploadModal(false);
+          
+          // Refresh the posts to ensure everything is up to date
+          // This will refetch all posts and ensure likes and comments work
+          fetchPosts();
           
         } catch (error: any) {
           console.error("Error posting:", error);
@@ -339,14 +335,6 @@ export default function SocialPlatform_tab() {
         if (isLoadingMore || !hasMore) return; // Prevent multiple simultaneous requests
         setIsLoadingMore(true);
       } else {
-        const cached = queryClient.getQueryData<{ posts: Post[]; hasMore: boolean; lastEvaluatedKey: string | null }>(['posts']);
-        if (cached) {
-          setPosts(cached.posts);
-          setHasMore(cached.hasMore);
-          setLastEvaluatedKey(cached.lastEvaluatedKey);
-          setLoading(false);
-          return;
-        }
         setLoading(true);
       }
     
@@ -366,17 +354,15 @@ export default function SocialPlatform_tab() {
         const postsData = await response.json();
         console.log("Posts data from DynamoDB:", postsData);
         
-        const newLastKey = postsData.lastEvaluatedKey || null;
-        const hasMoreVal = !!postsData.lastEvaluatedKey && postsData.data && postsData.data.length === limit;
-        setLastEvaluatedKey(newLastKey);
-        setHasMore(hasMoreVal);
+        // Update the lastEvaluatedKey for next pagination request
+        setLastEvaluatedKey(postsData.lastEvaluatedKey || null);
+        
+        // If no more posts or no lastEvaluatedKey, we've reached the end
+        setHasMore(!!postsData.lastEvaluatedKey && postsData.data && postsData.data.length === limit);
     
         if (!postsData.data || !Array.isArray(postsData.data) || postsData.data.length === 0) {
           if (!loadMore) {
             setPosts([]);
-            updateCache([], false, null);
-            setHasMore(false);
-            setLastEvaluatedKey(null);
           }
           setLoading(false);
           setIsLoadingMore(false);
@@ -506,16 +492,9 @@ export default function SocialPlatform_tab() {
     
         // The key change: if loading more, append to existing posts instead of replacing
         if (loadMore) {
-          setPosts(currentPosts => {
-            const updated = [...currentPosts, ...postsWithData];
-            updateCache(updated, hasMoreVal, newLastKey);
-            return updated;
-          });
+          setPosts(currentPosts => [...currentPosts, ...postsWithData]);
         } else {
-          setPosts(() => {
-            updateCache(postsWithData, hasMoreVal, newLastKey);
-            return postsWithData;
-          });
+          setPosts(postsWithData);
         }
       } catch (error: any) {
         console.error('Error fetching posts:', error);
@@ -561,8 +540,8 @@ export default function SocialPlatform_tab() {
         console.log("Toggling like for post:", post.id, "photo:", post.photo_id);
 
         // Optimistically update UI
-        setPosts(currentPosts => {
-          const updated = currentPosts.map(p =>
+        setPosts(currentPosts =>
+          currentPosts.map(p =>
             (p.id === post.id && p.photo_id === post.photo_id) ? {
               ...p,
               likes: hasLiked ? p.likes - 1 : p.likes + 1,
@@ -570,10 +549,8 @@ export default function SocialPlatform_tab() {
               ? p.liked_by.filter(u => u !== userEmail)
                 : [...p.liked_by, userEmail]
             } : p
-          );
-          updateCache(updated);
-          return updated;
-        });
+          )
+        );
 
         if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
           setActivePost({
@@ -611,17 +588,15 @@ export default function SocialPlatform_tab() {
           const serverLikeCount = attrs.likes && attrs.likes.N ? parseInt(attrs.likes.N, 10) : 0;
           const serverLikedBy = attrs.liked_by && attrs.liked_by.SS ? attrs.liked_by.SS : [];
 
-          setPosts(currentPosts => {
-            const updated = currentPosts.map(p =>
+          setPosts(currentPosts =>
+            currentPosts.map(p =>
               (p.id === post.id && p.photo_id === post.photo_id) ? {
                 ...p,
                 likes: serverLikeCount,
                 liked_by: serverLikedBy
               } : p
-            );
-            updateCache(updated);
-            return updated;
-          });
+            )
+          );
 
           if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
             setActivePost({
@@ -635,8 +610,8 @@ export default function SocialPlatform_tab() {
         console.error("Error liking post:", error);
 
         // Revert the optimistic update if there was an error
-        setPosts(currentPosts => {
-          const updated = currentPosts.map(p =>
+        setPosts(currentPosts =>
+          currentPosts.map(p =>
             (p.id === post.id && p.photo_id === post.photo_id) ? {
               ...p,
               likes: hasLiked ? p.likes + 1 : p.likes - 1,
@@ -644,10 +619,8 @@ export default function SocialPlatform_tab() {
                 ? [...p.liked_by, userEmail]
                 : p.liked_by.filter(u => u !== userEmail)
             } : p
-          );
-          updateCache(updated);
-          return updated;
-        });
+          )
+        );
 
         if (activePost && activePost.id === post.id && activePost.photo_id === post.photo_id) {
           setActivePost({
@@ -687,7 +660,7 @@ export default function SocialPlatform_tab() {
         // Optimistically update the UI first
         // 1. Update ONLY the specific post in the posts array
         setPosts(currentPosts => {
-          const updated = currentPosts.map(post => {
+          return currentPosts.map(post => {
             if (post.id === postId && post.photo_id === s3_key) {
               // Create a new array with the existing comments and the new one
               const updatedComments = [...(post.comments || []), newComment];
@@ -698,8 +671,6 @@ export default function SocialPlatform_tab() {
             }
             return post;
           });
-          updateCache(updated);
-          return updated;
         });
         
         // 2. Update the active post if it's the one being commented on
@@ -757,7 +728,7 @@ export default function SocialPlatform_tab() {
           
           // Update ONLY the specific post with formatted comments
           setPosts(currentPosts => {
-            const updated = currentPosts.map(post => {
+            return currentPosts.map(post => {
               if (post.id === postId && post.photo_id === s3_key) {
                 return {
                   ...post,
@@ -766,8 +737,6 @@ export default function SocialPlatform_tab() {
               }
               return post;
             });
-            updateCache(updated);
-            return updated;
           });
           
           // Update active post with formatted comments if needed
@@ -827,6 +796,12 @@ export default function SocialPlatform_tab() {
         setActivePost(null); //Close popeu
       }
     }
+
+    //set up event listener when modal is created and removes listener when popup is closed
+    //also fetch post from database
+    useEffect(() => {
+      fetchPosts();
+    }, []);
 
     // 🔹 Handle clicking outside of the comment modal
     useEffect(() => {
