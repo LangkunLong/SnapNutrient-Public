@@ -59,15 +59,13 @@ export async function POST(req: Request) {
             const nutrientSource = raw.nutrients;
             const normalizedResponse = {
                 name: raw.name,
-                nutrients: {
-                    calories: Number(nutrientSource.calories) || 0,
-                    protein: Number(nutrientSource.protein) || 0,
-                    carbohydrates: Number(nutrientSource.carbohydrates) || 0,
-                    fat: Number(nutrientSource.fat) || 0,
-                    fiber: Number(nutrientSource.fiber) || 0,
-                    sugar: Number(nutrientSource.sugar) || 0,
-                    sodium: Number(nutrientSource.sodium) || 0,
-                },
+                calories: Number(nutrientSource.calories) || 0,
+                protein: Number(nutrientSource.protein) || 0,
+                carbohydrates: Number(nutrientSource.carbohydrates) || 0,
+                fat: Number(nutrientSource.fat) || 0,
+                fiber: Number(nutrientSource.fiber) || 0,
+                sugar: Number(nutrientSource.sugar) || 0,
+                sodium: Number(nutrientSource.sodium) || 0,
             };
 
             return NextResponse.json({
