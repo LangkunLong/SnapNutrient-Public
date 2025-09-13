@@ -12,7 +12,7 @@ import { useNavigationStore } from '@/store/navigationStore';
 //react components of tabs
 import Camera_tab from './camera/page';
 import Profile_tab from './profile/page';
-import SocialPlatform_tab from './social_platform/page';
+import SocialPlatformClient from './social_platform/SocialPlatformClient';
 import Dashboard_tab from './dashboard/page';
 
 const Authorized_Home = () => {
@@ -55,7 +55,7 @@ const Authorized_Home = () => {
     switch (activeTab) {
       case 'home':
         return (
-          <SocialPlatform_tab/>
+          <SocialPlatformClient initialPosts={[]} initialLastKey={null} />
         );
       case 'camera':
         return (
