@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getLatestPosts } from "@/lib/socialPostFunctions";
 
+export const dynamic = 'force-dynamic';
+
 interface Post {
   id: string;
   photo_id?: string;

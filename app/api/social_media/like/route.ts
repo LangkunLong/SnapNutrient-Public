@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { likePost, getPostById } from "@/lib/socialPostFunctions";
 
+export const dynamic = 'force-dynamic';
+
 // liking a post (POST /api/social_media/like)
 export async function POST(req: Request) {
     try {

@@ -1,14 +1,17 @@
 import SocialPlatformClient, { type Post } from "./SocialPlatformClient";
 import {headers} from "next/headers"
+export const dynamic = "force-dynamic";
+
 
 async function getInitialPosts(): Promise<{ posts: Post[]; lastKey: string | null }> {
   try {
     const headerList = await headers();
-    const protocol = headerList.get("x-forwarded-proto") || "http";
+    const protocol = headerList.get("x-forwarded-proto") || "https";
     const host = headerList.get("host");
-    const baseUrl =
-      process.env.NEXTAUTH_URL ||
-      (host ? `${protocol}://${host}` : "http://localhost:3000");
+    const envUrl = process.env.NEXTAUTH_URL
+      ? new URL(process.env.NEXTAUTH_URL).origin
+      : null;
+    const baseUrl = envUrl || (host ? `${protocol}://${host}` : "http://localhost:3000");
     const res = await fetch(
       `${baseUrl}/api/social_media/hydrated?limit=10`,
       { cache: "no-store" }

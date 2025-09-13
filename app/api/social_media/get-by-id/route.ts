@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/usersFunctions';
 import { generateSignedGetUrl } from '@/lib/s3Functions';
 
+export const dynamic = 'force-dynamic';
+
 
 // The HTTP method function is automatically called when corresponding type of request is made to this endpoint
 // if don't have the async and await, it will not wait for the asynchronous operations to the complete and directly returns

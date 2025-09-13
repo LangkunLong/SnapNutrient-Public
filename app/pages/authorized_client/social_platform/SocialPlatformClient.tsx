@@ -90,7 +90,7 @@ export default function SocialPlatformClient({
     const fetchInitialPosts = async (): Promise<Post[]> => {
       try {
         const url = `/api/social_media/hydrated?limit=10`;
-        const response = await fetch(url);
+        const response = await fetch(url, { cache: 'no-store' });
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
@@ -364,7 +364,7 @@ const fetchMorePosts = async (limit: number = 10) => {
     if (lastEvaluatedKey) {
       url += `&lastKey=${encodeURIComponent(lastEvaluatedKey)}`;
     }
-    const response = await fetch(url);
+    const response = await await fetch(url, { cache: 'no-store' });
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`);

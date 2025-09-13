@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { addComment, getPostById } from "@/lib/socialPostFunctions";
+export const dynamic = 'force-dynamic';
 
 // adding a comment to a post
 export async function POST(req: Request) {

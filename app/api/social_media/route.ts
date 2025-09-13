@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { addPost, getLatestPosts} from "@/lib/socialPostFunctions"
 
+export const dynamic = 'force-dynamic';
+
 interface SocialMediaTable{
     id: string;
     photo_id: string;
