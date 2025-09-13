@@ -123,7 +123,7 @@ export default function SocialPlatformClient({
     const { data: posts = [], isLoading } = useQuery<Post[]>({
       queryKey: ['socialPosts'],
       queryFn: fetchInitialPosts,
-      initialData: initialPosts,
+      initialData: initialPosts.length > 0 ? initialPosts : undefined
     });
 
     const [activePost, setActivePost] = useState<Post | null>(null); //track the active post for viewing comments
