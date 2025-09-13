@@ -1,7 +1,7 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { AuthProvider } from '@/components/auth/AuthProvider'
 import PWAInstallPrompt from '@/components/PWAInstallPrompt'
+import { Providers } from './providers'
 
 const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
@@ -32,7 +32,7 @@ export default function RootLayout(
         <meta name="google-site-verification" content="Fd0LlHOUe87w7f6ufaa3iz9IXj-2HNbDpxSsHsWzrrA" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
+        <Providers>
           <div className="min-h-screen flex flex-col">
             <main className="flex-grow w-full">
               <div>
@@ -41,7 +41,7 @@ export default function RootLayout(
               </div>
             </main>
           </div>
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   )
