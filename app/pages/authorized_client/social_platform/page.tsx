@@ -3,7 +3,7 @@ import SocialPlatformClient, { type Post } from "./SocialPlatformClient";
 async function getInitialPosts(): Promise<{ posts: Post[]; lastKey: string | null }> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/social_media/hydrated?limit=10`,
+      `${process.env.NEXTAUTH_URL || ''}/api/social_media/hydrated?limit=10`,
       { cache: 'no-store' }
     );
     if (!res.ok) {
