@@ -326,199 +326,79 @@ export default function SocialPlatformClient({
     };
 
     // Fetch posts from server-side hydrated endpoint
-    const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
-      if (loadMore) {
-        if (isLoadingMore || !hasMore) return;
-        setIsLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
-    
-      try {
-        // Add lastEvaluatedKey to the request if we're loading more posts
-        let url = `/api/social_media/hydrated?limit=${limit}`;
-        if (loadMore && lastEvaluatedKey) {
-          url += `&lastKey=${encodeURIComponent(lastEvaluatedKey)}`;
-        }
-    
-        const response = await fetch(url);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
-        const postsData = await response.json();
-    
-        // Update the lastEvaluatedKey for next pagination request
-        setLastEvaluatedKey(postsData.lastEvaluatedKey || null);
-        
-        // If no more posts or no lastEvaluatedKey, we've reached the end
-        setHasMore(!!postsData.lastEvaluatedKey && postsData.data && postsData.data.length === limit);
-    
-        if (!postsData.data || !Array.isArray(postsData.data) || postsData.data.length === 0) {
-          if (!loadMore) {
-            setPosts([]);
-          }
-          setLoading(false);
-          setIsLoadingMore(false);
-          return;
-        }
-        const postsWithFallback: Post[] = postsData.data.map((post: Partial<Post>) => ({
-          id: post.id as string,
-          user: post.user || 'User',
-          profile_pic: post.profile_pic || default_profile_pic,
-          caption: post.caption || '',
-          photo_id: post.photo_id || '',
-          picture: post.picture || default_social_pic,
-          likes: typeof post.likes === 'number' ? post.likes : parseInt(String(post.likes), 10) || 0,
-          liked_by: post.liked_by || [],
-          comments: post.comments || [],
-          posted_time: post.posted_time || '',
-        }));
-    
-        // Batch all image keys into a single request
-        const imageKeys: string[] = postsData.data
-          .map((post: Post) => post.photo_id)
-          .filter((key: string | undefined): key is string => !!key);
-        console.log("Image Keys Sent to API:", imageKeys);
-        
-        // Get all presigned URLs in a single request
-        const imageUrlMap: Record<string, string> = {};
-        
-        if (imageKeys.length > 0) {
-          try {
-            const presignedUrlResponse = await fetch('/api/get-batch-image-urls', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                keys: imageKeys
-              }),
-            });
-            
-            if (presignedUrlResponse.ok) {
-              const responseData = await presignedUrlResponse.json();
-              
-              if (responseData.urls && Array.isArray(responseData.urls)) {
-                responseData.urls.forEach((urlItem: { key: string; url: string }) => {
-                  if (urlItem && urlItem.key && urlItem.url) {
-                  imageUrlMap[urlItem.key] = urlItem.url;
-                  }
-                });
-              }
-            }
-          } catch (error) {
-            console.error('Error fetching image URLs:', error);
-          }
-        }
-        
-        // Collect all unique user IDs from posts
-        const userIds: string[] = [...new Set((postsData.data as Post[]).map((post) => post.id))];
-        
-        // Fetch user data for all posts
-        const userDataPromises = userIds
-          .filter((userId): userId is string => typeof userId === 'string')
-          .map(userId => fetchUserData(userId));
-        const userDataResults = await Promise.all(userDataPromises);
-        
-        // Create a map of user IDs to user data
-        const newUserDataMap: Record<string, UserData> = {};
-        userDataResults.forEach(userData => {
-          if (userData) {
-            newUserDataMap[userData.id] = userData;
-          }
-        });
-        
-        // Update our userDataMap with new user data
-        setUserDataMap(prevMap => ({...prevMap, ...newUserDataMap}));
-        
-        // Map posts with user data and image URLs
-        interface PostWithData extends Post {
-          user: string;
-          profile_pic: string;
-          picture: string;
-          likes: number;
-        }
 
-        const postsWithData: PostWithData[] = await Promise.all(postsData.data.map(async (post: Post): Promise<PostWithData> => {
-          // Get user data from map or use defaults
-          const userData: UserData = newUserDataMap[post.id] || { id: post.id, name: 'User' };
-          
-          // Get profile image URL
-          let profilePicUrl: string = default_profile_pic;
-          if (userData.profileImageUrl) {
-            profilePicUrl = userData.profileImageUrl;
-          } else if (userData.profileImage) {
-            try {
-              // Fetch profile image URL if not already in user data
-              const profileResponse = await fetch('/api/get-batch-image-urls', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            keys: [userData.profileImage]
-          }),
-              });
-              
-              if (profileResponse.ok) {
-          const profileData: { urls: { url: string }[] } = await profileResponse.json();
-          if (profileData.urls && profileData.urls.length > 0) {
-            profilePicUrl = profileData.urls[0].url;
-          }
-              }
-            } catch (error) {
-              console.error('Error fetching profile image:', error);
-            }
-          }
-          
-          // Ensure likes is always a number
-          let likesCount: number = 0;
-          if (post.likes !== undefined) {
-            if (typeof post.likes === 'number') {
-              likesCount = post.likes;
-            } else if (typeof post.likes === 'string') {
-              likesCount = parseInt(post.likes, 10) || 0;
-            } else if (post.likes && typeof post.likes === 'object' && 'N' in post.likes) {
-              likesCount = typeof post.likes === 'object' && post.likes !== null && 'N' in post.likes ? parseInt((post.likes as { N: string }).N, 10) || 0 : 0;
-            }
-          }
-          
-          return {
-            ...post,
-            user: userData.name || 'User',
-            profile_pic: profilePicUrl,
-            picture: post.photo_id && imageUrlMap[post.photo_id]
-              ? imageUrlMap[post.photo_id]
-              : default_social_pic,
-            likes: likesCount,
-            liked_by: post.liked_by || []
-          };
-        }));
-    
-        // The key change: if loading more, append to existing posts instead of replacing
-        if (loadMore) {
-          setPosts(currentPosts => [...currentPosts, ...postsWithData]);
-        } else {
-          setPosts(postsWithData);
-        }
-      } catch (error: any) {
-        console.error('Error fetching posts:', error);
-      } finally {
-        setLoading(false);
-        setIsLoadingMore(false);
-      }
-    };
+const fetchPosts = async (limit: number = 10, loadMore: boolean = false) => {
+  if (loadMore) {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+  } else {
+    setLoading(true);
+  }
 
-    // Add a function to get user display name
-    const getUserDisplayName = (userId: string): string => {
-      // Check if we have this user's data
-      if (userDataMap[userId]) {
-        return userDataMap[userId].name || userId;
+  try {
+    let url = `/api/social_media/hydrated?limit=${limit}`;
+    if (loadMore && lastEvaluatedKey) {
+      url += `&lastKey=${encodeURIComponent(lastEvaluatedKey)}`;
+    }
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const postsData = await response.json();
+
+    setLastEvaluatedKey(postsData.lastEvaluatedKey || null);
+    setHasMore(!!postsData.lastEvaluatedKey && postsData.data && postsData.data.length === limit);
+
+    if (!postsData.data || !Array.isArray(postsData.data) || postsData.data.length === 0) {
+      if (!loadMore) {
+        setPosts([]);
       }
-      // If not in the map, return the ID as fallback
-      return userId;
-    };
+      setLoading(false);
+      setIsLoadingMore(false);
+      return;
+    }
+
+    const postsWithFallback: Post[] = postsData.data.map((post: Partial<Post>) => ({
+      id: post.id as string,
+      user: post.user || 'User',
+      profile_pic: post.profile_pic || default_profile_pic,
+      caption: post.caption || '',
+      photo_id: post.photo_id || '',
+      picture: post.picture || default_social_pic,
+      likes:
+        typeof post.likes === 'number'
+          ? post.likes
+          : parseInt(String(post.likes), 10) || 0,
+      liked_by: post.liked_by || [],
+      comments: post.comments || [],
+      posted_time: post.posted_time || '',
+    }));
+
+    if (loadMore) {
+      setPosts(currentPosts => [...currentPosts, ...postsWithFallback]);
+    } else {
+      setPosts(postsWithFallback);
+    }
+  } catch (error: any) {
+    console.error('Error fetching posts:', error);
+  } finally {
+    setLoading(false);
+    setIsLoadingMore(false);
+  }
+};
+
+  // Add a function to get user display name
+  const getUserDisplayName = (userId: string): string => {
+    // Check if we have this user's data
+    if (userDataMap[userId]) {
+      return userDataMap[userId].name || userId;
+    }
+    // If not in the map, return the ID as fallback
+    return userId;
+  };
     
 
     const isPostLiked = (post: Post): boolean => {
