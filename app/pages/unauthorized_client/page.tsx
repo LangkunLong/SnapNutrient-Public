@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Camera, Brain, Utensils, Users } from 'lucide-react'
 import Link from 'next/link'
+import LandingImageAnalysis from '@/components/LandingImageAnalysis'
 
 export default function Unauthorized_Home() {
   return (
     <div>
-      {/* Hero Section with Image */}
+      {/* Hero Section */}
       <section className="text-center flex justify-center mb-16">
         <div>
           <h1 className="text-4xl font-bold mb-4">
@@ -24,7 +25,13 @@ export default function Unauthorized_Home() {
           </Link>
         </div>
       </section>
-      {/* Features Section with Lucide Icons */}
+
+      {/* Interactive Demo Section */}
+      <section className="mb-16 bg-gray-50 rounded-xl p-8">
+        <LandingImageAnalysis />
+      </section>
+
+      {/* Features Section */}
       <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
         <Card className="p-6 text-center">
           <div className="flex justify-center mb-4">
@@ -102,6 +109,19 @@ export default function Unauthorized_Home() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="text-center bg-blue-600 text-white rounded-xl p-8 mb-16">
+        <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
+        <p className="text-xl mb-6">
+          Join thousands of users who are already tracking their nutrition with AI
+        </p>
+        <Link href="/auth/signin">
+          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+            Sign Up for Free
+          </Button>
+        </Link>
       </section>
     </div>
   )
