@@ -13,7 +13,7 @@ export default function Unauthorized_Home() {
       <section className="text-center flex justify-center mb-16">
         <div>
           <h1 className="text-4xl font-bold mb-4">
-            Track Your Nutrition with AI Precision
+            Your Personalized Nutrition Tracking Platform
           </h1>
           <p className="text-xl text-gray-600 mb-8">
             Simply snap a photo of your meal and get instant nutritional insights
@@ -39,7 +39,7 @@ export default function Unauthorized_Home() {
               src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/snap-track.png"
               alt="Camera feature - Upload and capture food photos"
               fill
-              className="object-cover"
+              className="object-cover object-top"
             />
           </div>
           <div className="p-6 text-center">
@@ -47,7 +47,7 @@ export default function Unauthorized_Home() {
               <Camera className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-lg font-semibold mb-2">Snap & Track</h3>
-            <p className="text-gray-600 text-sm">Upload food photos for instant calorie estimation</p>
+            <p className="text-gray-600 text-sm">Upload your meal photos for instant calorie estimation</p>
           </div>
         </Card>
 
@@ -65,7 +65,7 @@ export default function Unauthorized_Home() {
               <Brain className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
-            <p className="text-gray-600 text-sm">Advanced AI recognition for accurate nutritional data</p>
+            <p className="text-gray-600 text-sm">AI recognition for accurate nutritional data</p>
           </div>
         </Card>
 
@@ -75,7 +75,7 @@ export default function Unauthorized_Home() {
               src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/personalized-diet.png"
               alt="Dashboard - Track nutrition and progress"
               fill
-              className="object-cover"
+              className="object-contain object-top bg-white"
             />
           </div>
           <div className="p-6 text-center">
@@ -83,7 +83,7 @@ export default function Unauthorized_Home() {
               <Utensils className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-lg font-semibold mb-2">Personalized Plans</h3>
-            <p className="text-gray-600 text-sm">Get tailored dietary recommendations</p>
+            <p className="text-gray-600 text-sm">Get personalized dietary recommendations based on your fitness goals</p>
           </div>
         </Card>
 
@@ -101,7 +101,7 @@ export default function Unauthorized_Home() {
               <Users className="h-8 w-8 text-blue-600" />
             </div>
             <h3 className="text-lg font-semibold mb-2">Social Platform</h3>
-            <p className="text-gray-600 text-sm">Share progress and connect with others</p>
+            <p className="text-gray-600 text-sm">Share your progress and connect with other food enthusiasts!</p>
           </div>
         </Card>
       </section>
@@ -155,11 +155,11 @@ export default function Unauthorized_Home() {
       <section className="text-center bg-blue-600 text-white rounded-xl p-8 mb-16">
         <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
         <p className="text-xl mb-6">
-          Join thousands of users who are already tracking their nutrition with AI
+          Join other users in our community today!
         </p>
         <Link href="/auth/signin">
           <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-            Sign Up for Free
+            Sign Up Now
           </Button>
         </Link>
       </section>
