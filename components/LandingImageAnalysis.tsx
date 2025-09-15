@@ -366,7 +366,7 @@ const LandingImageAnalysis = () => {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-gray-600">
-              To save your meal analysis and access personalized nutrition tracking, you'll need to create an account.
+              To save your meal analysis and access personalized nutrition tracking, you&apos;ll need to create an account.
             </p>
             <div className="space-y-3">
               <h4 className="font-medium">With an account, you can:</h4>
