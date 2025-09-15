@@ -31,104 +31,78 @@ export default function Unauthorized_Home() {
         <LandingImageAnalysis />
       </section>
 
-      {/* Features Section
-      <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-        <Card className="p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <Camera className="h-12 w-12 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Snap & Track</h3>
-          <p className="text-gray-600">Upload food photos for instant calorie estimation</p>
-        </Card>
-
-        <Card className="p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <Brain className="h-12 w-12 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
-          <p className="text-gray-600">Advanced AI recognition for accurate nutritional data</p>
-        </Card>
-
-        <Card className="p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <Utensils className="h-12 w-12 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Personalized Plans</h3>
-          <p className="text-gray-600">Get tailored dietary recommendations</p>
-        </Card>
-
-        <Card className="p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <Users className="h-12 w-12 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Social Platform</h3>
-          <p className="text-gray-600">Share progress and connect with others</p>
-        </Card>
-      </section> */}
       {/* Features Section */}
       <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-        <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-          <div className="flex justify-center mb-4">
-            <div className="relative w-full h-32 mb-2">
-              <Image
-                src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/snap-track.png"
-                alt="Camera feature screenshot"
-                fill
-                className="object-cover rounded-lg shadow-md"
-              />
-            </div>
-            <Camera className="h-8 w-8 text-blue-600 absolute mt-2 bg-white rounded-full p-1" />
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+          <div className="relative w-full h-[500px]">
+            <Image
+              src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/snap-track.png"
+              alt="Camera feature - Upload and capture food photos"
+              fill
+              className="object-cover"
+            />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Snap & Track</h3>
-          <p className="text-gray-600">Upload food photos for instant calorie estimation</p>
+          <div className="p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <Camera className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Snap & Track</h3>
+            <p className="text-gray-600 text-sm">Upload food photos for instant calorie estimation</p>
+          </div>
         </Card>
 
-        <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-          <div className="flex justify-center mb-4">
-            <div className="relative w-full h-32 mb-2">
-              <Image
-                src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/ai-analysis.png"
-                alt="AI analysis screenshot"
-                fill
-                className="object-cover rounded-lg shadow-md"
-              />
-            </div>
-            <Brain className="h-8 w-8 text-blue-600 absolute mt-2 bg-white rounded-full p-1" />
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+          <div className="relative w-full h-[500px]">
+            <Image
+              src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/ai-analysis.png"
+              alt="AI Analysis - Nutritional breakdown results"
+              fill
+              className="object-cover"
+            />
           </div>
-          <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
-          <p className="text-gray-600">Advanced AI recognition for accurate nutritional data</p>
+          <div className="p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <Brain className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
+            <p className="text-gray-600 text-sm">Advanced AI recognition for accurate nutritional data</p>
+          </div>
         </Card>
 
-        <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-          <div className="flex justify-center mb-4">
-            <div className="relative w-full h-32 mb-2">
-              <Image
-                src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/personalized-diet.png"
-                alt="Dashboard screenshot"
-                fill
-                className="object-cover rounded-lg shadow-md"
-              />
-            </div>
-            <Utensils className="h-8 w-8 text-blue-600 absolute mt-2 bg-white rounded-full p-1" />
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+          <div className="relative w-full h-[500px]">
+            <Image
+              src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/personalized-diet.png"
+              alt="Dashboard - Track nutrition and progress"
+              fill
+              className="object-cover"
+            />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Personalized Plans</h3>
-          <p className="text-gray-600">Get tailored dietary recommendations</p>
+          <div className="p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <Utensils className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Personalized Plans</h3>
+            <p className="text-gray-600 text-sm">Get tailored dietary recommendations</p>
+          </div>
         </Card>
 
-        <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-          <div className="flex justify-center mb-4">
-            <div className="relative w-full h-32 mb-2">
-              <Image
-                src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/social-platform.png"
-                alt="Social platform screenshot"
-                fill
-                className="object-cover rounded-lg shadow-md"
-              />
-            </div>
-            <Users className="h-8 w-8 text-blue-600 absolute mt-2 bg-white rounded-full p-1" />
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+          <div className="relative w-full h-[500px]">
+            <Image
+              src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/social-platform.png"
+              alt="Social Platform - Share and connect with others"
+              fill
+              className="object-cover"
+            />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Social Platform</h3>
-          <p className="text-gray-600">Share progress and connect with others</p>
+          <div className="p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <Users className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Social Platform</h3>
+            <p className="text-gray-600 text-sm">Share progress and connect with others</p>
+          </div>
         </Card>
       </section>
 
