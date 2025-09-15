@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Camera, Brain, Utensils, Users } from 'lucide-react'
 import Link from 'next/link'
+import LandingImageAnalysis from '@/components/LandingImageAnalysis'
 
 export default function Unauthorized_Home() {
   return (
     <div>
-      {/* Hero Section with Image */}
+      {/* Hero Section */}
       <section className="text-center flex justify-center mb-16">
         <div>
           <h1 className="text-4xl font-bold mb-4">
@@ -24,38 +25,84 @@ export default function Unauthorized_Home() {
           </Link>
         </div>
       </section>
-      {/* Features Section with Lucide Icons */}
+
+      {/* Interactive Demo Section */}
+      <section className="mb-16 bg-gray-50 rounded-xl p-8">
+        <LandingImageAnalysis />
+      </section>
+
+      {/* Features Section */}
       <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-        <Card className="p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <Camera className="h-12 w-12 text-blue-600" />
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+          <div className="relative w-full h-[500px]">
+            <Image
+              src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/snap-track.png"
+              alt="Camera feature - Upload and capture food photos"
+              fill
+              className="object-cover"
+            />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Snap & Track</h3>
-          <p className="text-gray-600">Upload food photos for instant calorie estimation</p>
+          <div className="p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <Camera className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Snap & Track</h3>
+            <p className="text-gray-600 text-sm">Upload food photos for instant calorie estimation</p>
+          </div>
         </Card>
 
-        <Card className="p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <Brain className="h-12 w-12 text-blue-600" />
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+          <div className="relative w-full h-[500px]">
+            <Image
+              src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/ai-analysis.png"
+              alt="AI Analysis - Nutritional breakdown results"
+              fill
+              className="object-cover"
+            />
           </div>
-          <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
-          <p className="text-gray-600">Advanced AI recognition for accurate nutritional data</p>
+          <div className="p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <Brain className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
+            <p className="text-gray-600 text-sm">Advanced AI recognition for accurate nutritional data</p>
+          </div>
         </Card>
 
-        <Card className="p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <Utensils className="h-12 w-12 text-blue-600" />
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+          <div className="relative w-full h-[500px]">
+            <Image
+              src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/personalized-diet.png"
+              alt="Dashboard - Track nutrition and progress"
+              fill
+              className="object-cover"
+            />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Personalized Plans</h3>
-          <p className="text-gray-600">Get tailored dietary recommendations</p>
+          <div className="p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <Utensils className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Personalized Plans</h3>
+            <p className="text-gray-600 text-sm">Get tailored dietary recommendations</p>
+          </div>
         </Card>
 
-        <Card className="p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <Users className="h-12 w-12 text-blue-600" />
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+          <div className="relative w-full h-[500px]">
+            <Image
+              src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/social-platform.png"
+              alt="Social Platform - Share and connect with others"
+              fill
+              className="object-cover"
+            />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Social Platform</h3>
-          <p className="text-gray-600">Share progress and connect with others</p>
+          <div className="p-6 text-center">
+            <div className="flex justify-center mb-3">
+              <Users className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Social Platform</h3>
+            <p className="text-gray-600 text-sm">Share progress and connect with others</p>
+          </div>
         </Card>
       </section>
 
@@ -102,6 +149,19 @@ export default function Unauthorized_Home() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="text-center bg-blue-600 text-white rounded-xl p-8 mb-16">
+        <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
+        <p className="text-xl mb-6">
+          Join thousands of users who are already tracking their nutrition with AI
+        </p>
+        <Link href="/auth/signin">
+          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+            Sign Up for Free
+          </Button>
+        </Link>
       </section>
     </div>
   )
