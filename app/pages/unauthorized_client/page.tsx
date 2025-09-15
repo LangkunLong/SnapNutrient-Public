@@ -57,7 +57,7 @@ export default function Unauthorized_Home() {
               src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/ai-analysis.png"
               alt="AI Analysis - Nutritional breakdown results"
               fill
-              className="object-cover"
+              className="object-cover object-top"
             />
           </div>
           <div className="p-6 text-center">
@@ -93,7 +93,7 @@ export default function Unauthorized_Home() {
               src="https://snapnutrient-s3.s3.us-east-1.amazonaws.com/landing_page/social-platform.png"
               alt="Social Platform - Share and connect with others"
               fill
-              className="object-cover"
+              className="object-cover object-top"
             />
           </div>
           <div className="p-6 text-center">
